@@ -9,7 +9,7 @@
 			"code": ["boa.coffee"],
 			"year": 2013,
 			"duration": 0,
-			"contribution": "<p>Primary maintainer of Bank of America mobile application and online banking simulators. These simulators echo the look and functionality of the production applications and website, while only containing sample data.</p><p>Created custom framework to support the simulators from scratch in 2014, which drastically cut development time when adding new features and experience flows.</p>"
+			"contribution": "<p>Primary maintainer of Bank of America mobile application and online banking simulators for over 2 years. These simulators echo the look and functionality of the production applications and website, while only containing sample data.</p><p>Created a custom framework to support the simulators from scratch in 2014, which drastically cut development time when adding new features and experience flows. During this process the mobile simulator alone went from over 120 MB in size down to less than 3 MB, while increasing the number of flows and functionality.</p><p>The custom framework seeds example data from JSON files, and enables the chaining together of actions, such as: getting the next slide, transition by sliding the new slide in from the left, timing out for 1 second, then getting the next slide, and so on.</p><p>Everything in the simulator is organized into user flows, which makes it easier to replace sections of the simulators as they are updated over the years.</p><p>The simulators are only accessible within the Bank of America network.</p><p>Technologies: HTML, Sass, CoffeeScript, jQuery, JSON, Gulp, SVGs.</p>"
 		},{
 			"client": "Tasktop",
 			"logo": "tasktop.png",
@@ -19,7 +19,7 @@
 			"code": [],
 			"year": 2015,
 			"duration": 2,
-			"contribution": ""
+			"contribution": "<p>Launched in late May of 2015, this is a Drupal site that was built to replace the client’s previous site. One item they wanted to improve, was to make it easier for visitors to find resources related to their products and questions.</p><p>I was responsible for creating that searching and filtering mechanism to enable this. The feature, which can be accessed at <a href=\"http://tasktop.com/resources\">Tasktop Resources</a>, gets it’s data from a rendered JSON file, and then handles all the filtering, sorting, and text searching within the browser.</p><p>When the resource is a video, the logic can take any youtube link, or embed code, and generate the appropriate iFrame.</p><p>Technologies: HTML, Sass, TypeScript, JSON, Drupal.</p>"
 		},{
 			"client": "HealthSource RI",
 			"logo": "hsri.png",
@@ -29,7 +29,7 @@
 			"code": [],
 			"year": 2014,
 			"duration": 4,
-			"contribution": ""
+			"contribution": "<p>Health Source RI is the entry portal to Rhode Islands healthcare exchange, and I was a member of the team that created the version that is currently in use. The goal of the current release was to make the wealth of information available on the site easier to access and interact with. To this end, the UX designers came up with a few handy tools, which I implemented.</p><p>My primary responsibility was the JavaScript interactions on their main detail pages. These pages and their content appears in the main navigation, making it possible to deep link not only to a page, but to a specific section or resource within a page.</p><p>I was also asked to implement the scroll progress indicator on the right, and the interactions with FAQs and the resources bar at the bottom.</p><p>Technologies: HTML, Sass, CoffeeScript, jQuery, Wordpress.</p>"
 		},{
 			"client": "D'Angelo",
 			"logo": "dangelo.png",
@@ -39,7 +39,7 @@
 			"code": [],
 			"year": 2014,
 			"duration": 3,
-			"contribution": ""
+			"contribution": "<p>My team was hired to be part of the group to rebuild D’Angelo’s online presence. We were involved prior to the design phase, during which I created an interactive wire-framed site to demo the possible functionality of the menu and the locations pages.</p><p>As is my practice, these wireframes were created directly in HTML, CSS, and JavaScript, which allowed them to be responsive and interactive. During this, the interactions were refined with feedback, before the designers than took those wireframes and created the designs to match. The end result is D’Angelo’s current site, where I assisted during the main development as well.</p><p>Technologies: HTML, Sass, CoffeeScript, jQuery, JSON, Nunjucks.</p>"
 		},{
 			"client": "Whoop",
 			"logo": "whoop.png",
@@ -49,7 +49,7 @@
 			"code": [],
 			"year": 2014,
 			"duration": 1,
-			"contribution": ""
+			"contribution": "<p>Whoop is creating an as yet unreleased wearable. Prior to the launch being delayed, I was responsible for creating an interactive section of what was going to be their new home page. This section featured a 360 degree view of the wearable, which could rotate to specific angles based on which section of the story the visitor was interacting with.</p><p>The story section had multiple text and image layers that would also animate in and out of the stage, while the bracelet rotated, which than needed to line up with specific parts of the bracelet. And all of this had to work responsively.</p><p>Link is the current temporary landing page, awaiting device launch.</p><p>Technologies: HTML, Sass, CoffeeScript, jQuery, Drupal.</p>"
 		},{
 			"client": "MonarqRC RDS",
 			"logo": "rds.png",
@@ -59,7 +59,7 @@
 			"code": [],
 			"year": 2014,
 			"duration": 4,
-			"contribution": ""
+			"contribution": "<p>RDS is a meal management application used by hospitals to schedule and deliver meals to their patients. During the rollout I was involved with transferring data from the prior application, to the current RDS application. This involved customizing a Python script, which took data from rendered JSON files, imported them to a temporary SQLite database, completed multiple transformations, and finally exported the data into the new PostgreSQL database.</p><p>Technologies: Python, JSON, SQLite, PostgerSQL.</p>"
 		},{
 			"client": "Isles of Shoals",
 			"logo": "iossc.png",
@@ -69,7 +69,7 @@
 			"code": [],
 			"year": 2014,
 			"duration": 6,
-			"contribution": ""
+			"contribution": "<p>The Isles of Shoals website, completed mid 2014, is not only a customer facing website, that allows people to purchase tickets, it is also part of their business back end. During it’s development, I was primarily responsible for building all the interactions surrounding the calendars.</p><p>There ended up being 5 distinct versions of the calendar, which appeared in different locations on the customer accessible part, as well as the cruise planning, and sales sections of the admin interface. Each of these versions uses a common library I created for the project, and have modified to use in other projects since.</p><p>Technologies: HTML, Sass, CoffeScript, jQuery, Python, Flask.</p>"
 		},{
 			"client": "John Hancock Online Enrollment Experience",
 			"logo": "jhoee.png",
@@ -79,7 +79,7 @@
 			"code": [],
 			"year": 2014,
 			"duration": 2,
-			"contribution": ""
+			"contribution": "<p>Joining the team late, after the client had multiple failed development cycles to get their online enrollment experience completed, I was responsible for resolving multiple issues in this complex Angular.js application. Most of the issues were browser specific, Internet Explorer 8, and involved issues with video formats, as well as a multitude of other errors. After a few weeks, myself and 3 other developers were able to get it stable enough to be launched.</p><p>Technologies: HTML, JavaScript, Angular.js, Web Video.</p>"
 		},{
 			"client": "Versatile",
 			"logo": "versatile.png",
@@ -89,7 +89,7 @@
 			"code": [],
 			"year": 2014,
 			"duration": 4,
-			"contribution": ""
+			"contribution": "<p>Part of the brand update for Versatile, I was the main front-end resource to create their new website. One major feature was an animated and responsive hero section. This section featured multiple image and text layers that had to move based on user action, and also respond correctly to any device size.</p><p>Technologies: HTML, Sass, CoffeeScript, jQuery, Kentico, .NET, C#.</p>"
 		},{
 			"client": "Koko Fitclub",
 			"logo": "koko.png",
@@ -99,7 +99,7 @@
 			"code": [],
 			"year": 2013,
 			"duration": 4,
-			"contribution": ""
+			"contribution": "<p>During a major marketing update for Koko Fitclub, I was the main developer responsible for creating the experience for their new site. Part of the designs were story components that usually paired an image with some text. The client wanted a dotted line to connect this elements switching side to side. Each of these story elements needed to be fully editable within Drupal, so the path needed to be editable as well.</p><p>On the story items, there were a serious of drop-downs that controlled this line. They would say if the line should go through the left side, the right side, or if it started or ended at that story element. I then created a script that would look at these inputs, and using Bezier curves to connect the control points. Finally, for some variety, I made the length of the control lines vary randomly to created an interesting and path down the page.</p><p>Update, the dynamic path is not currently featured on the live site, as Koko Fitclub has replaced the entire site with a static version, while the client builds out a new Ruby on Rails backend.</p><p>Technologies: HTML, Sass, CoffeeScript, jQuery, Drupal.</p>"
 		},{
 			"client": "Bertucci's",
 			"logo": "bertuccis.png",
@@ -109,7 +109,7 @@
 			"code": [],
 			"year": 2013,
 			"duration": 4,
-			"contribution": ""
+			"contribution": "<p>I was part of the team to build the current version on Bertucci’s website. We were brought in early, so I was responsible for creating interactive wireframes to demo the possible menu interaction, as well as the location finder featured in the header.</p><p>These wireframes were created directly in HTML, CSS, and JavaScript, which made it possible to have responsive and interactive wireframes for the client to give feedback on. Once those were approved, the designers used those wireframes as guides to create the final design.</p><p>Finally, I contributed to the main site development by implementing the location interactive features. Including getting the device location, finding relevant restaurants, and allowing the visitor to save their favorite restaurant. That favorite restaurant is then featured in the header, so the user always has easy access to that restaurants hours and location.</p><p>Technologies: HTML, Sass, CoffeeScript, jQuery, Drupal.</p>"
 		},{
 			"client": "TrackMyTrainer",
 			"logo": "trackmytrainer.png",
@@ -119,7 +119,7 @@
 			"code": [],
 			"year": 2013,
 			"duration": 4,
-			"contribution": ""
+			"contribution": "<p>TrackMyTrainer is an web based mobile application that was in development to allow people to follow their personal trainer. I was responsible for creating the initial UX flows in Keynote, as well as some of the early designs. Later I assisted with some of the front-end development.</p><p>Technologies: HTML, Sass, CoffeeScript, PhotoShop, Keynote.</p>"
 		}
 	],
 	"code": [
