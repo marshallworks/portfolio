@@ -227,101 +227,101 @@
 	],
 	"images": [
 		{
-			"title": "",
-			"description": "",
-			"file": "090801CreatureWreck.jpg"
+			"title": "Minotaur Cyborg",
+			"description": "Semi-mechanical Minotaur, ready to charge into action. In game Render. Created using Zbrush, 3ds Max, Photoshop, and rendered in the UDK.",
+			"file": "Minotaur_Tech.jpg"
 		},{
-			"title": "",
-			"description": "",
-			"file": "BananaMonster.jpg"
+			"title": "Minotaur Cyborg",
+			"description": "Zbrush model of the Minotaur, rendered in Zbrush.",
+			"file": "Minotaur_Tech_Model.jpg"
+		},{
+			"title": "Boiler Room",
+			"description": "Boiler room inside a steam-punk ship, no textures only lighting. Created using 3ds Max, Zbrush, and Photoshop.",
+			"file": "Boiler_Gray.jpg"
 		},{
 			"title": "Boiler Room",
 			"description": "Boiler room inside a steam-punk ship. Created using 3ds Max, Zbrush, and Photoshop.",
-			"file": "Boiler_Gray.jpg"
-		},{
-			"title": "",
-			"description": "",
 			"file": "Boiler_View1.jpg"
 		},{
-			"title": "",
-			"description": "",
+			"title": "Boiler Room",
+			"description": "Boiler room inside a steam-punk ship. Created using 3ds Max, Zbrush, and Photoshop.",
 			"file": "Boiler_View3.jpg"
 		},{
-			"title": "",
-			"description": "",
-			"file": "F16_Danger_Areas.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "FighterCharacters.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "FighterDesign.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "HeadSculp.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "Jolly_Humor.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "MMTromp.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "Minotaur_Tech.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "Minotaur_Tech_Model.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "MonsterCol.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "NewBoss.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "Newman.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "P-51.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "RedHand.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "SloberMonster.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "Still.jpg"
-		},{
-			"title": "",
-			"description": "",
-			"file": "TheEvent.jpg"
-		},{
-			"title": "",
-			"description": "",
+			"title": "Uhnt Concept Sketch",
+			"description": "Underwater horse like creature. Painted in Photoshop.",
 			"file": "UhntDesignSketch.jpg"
 		},{
-			"title": "",
-			"description": "",
+			"title": "Uhnt Full-Resolution Model",
+			"description": "Based on the sketch, and created in Zbrush.",
 			"file": "UhntFullModel.jpg"
 		},{
-			"title": "",
-			"description": "",
+			"title": "Uhnt Game Model",
+			"description": "Created from Zbrush model using Blender 3D.",
 			"file": "UhntGameModel.jpg"
+		},{
+			"title": "Alien Turtle Head",
+			"description": "Zbrush model of an alien glowing turtle head.",
+			"file": "MonsterCol.jpg"
+		},{
+			"title": "The Event",
+			"description": "Special event poster illustration created for an in game promotion.",
+			"file": "TheEvent.jpg"
+		},{
+			"title": "Banana Monster",
+			"description": "This guy attracts small monkeys with his delicious looking banana antenna, to then eat... but it has been a while.",
+			"file": "BananaMonster.jpg"
+		},{
+			"title": "Slobber Monster",
+			"description": "Photoshop painting.",
+			"file": "SloberMonster.jpg"
+		},{
+			"title": "W Fighter",
+			"description": "W shaped alternative future fighter plane, which doubles as a logo.",
+			"file": "FighterDesign.jpg"
+		},{
+			"title": "Fighter Pilots",
+			"description": "Character designs for the crew of the two cockpit W Fighter.",
+			"file": "FighterCharacters.jpg"
+		},{
+			"title": "Boss Illustrations",
+			"description": "Created while lead content developer at a game company, for three new bosses added at the time. Photoshop paintings.",
+			"file": "NewBoss.jpg"
+		},{
+			"title": "Red Hand",
+			"description": "In oil.",
+			"file": "RedHand.jpg"
+		},{
+			"title": "Still-life",
+			"description": "In oil.",
+			"file": "Still.jpg"
+		},{
+			"title": "Marilyn Monroe Trompe L'oeil",
+			"description": "In oil.",
+			"file": "MMTromp.jpg"
+		},{
+			"title": "Head Sculpture",
+			"description": "In clay.",
+			"file": "HeadSculp.jpg"
+		},{
+			"title": "Newman",
+			"description": "3D character created in Blender 3D.",
+			"file": "Newman.jpg"
+		},{
+			"title": "P-51",
+			"description": "3D model of WWII plane created in Blender 3D and textured in Photoshop.",
+			"file": "P-51.jpg"
+		},{
+			"title": "F16 Danger Areas",
+			"description": "Info graph to stay away from the things that can poke an eye out.",
+			"file": "F16_Danger_Areas.jpg"
+		},{
+			"title": "Jolly Humor Ice Cream",
+			"description": "Ice cream that is worth the brain-freeze.",
+			"file": "Jolly_Humor.jpg"
+		},{
+			"title": "Sketches",
+			"description": "A mechanical monster and some crash debris in ballpoint.",
+			"file": "090801CreatureWreck.jpg"
 		}
 	],
 	"skills": [
