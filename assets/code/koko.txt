@@ -1,0 +1,193 @@
+class Koko.PathDots
+	_init = false
+	globalShift = 0
+	randomizeAmount = 1
+	dotsPerPath = 20
+	dotsAppearPos = 0.8
+	dotsAppearAnim = 540
+	coordTracker = []
+
+	constructor: (@attributes)->
+		if not _init
+			Koko.PathDots.initCoord()
+			_init = true
+		else
+			console.log('App already initialized.')
+
+	@statusReport: ->
+		_init: _init
+		randomizeAmount: randomizeAmount
+		dotsPerPath: dotsPerPath
+		dotsAppearPos: dotsAppearPos
+		dotsAppearAnim: dotsAppearAnim
+		coordTracker: coordTracker
+
+	@revealDots: ->
+		scrollPos = jQuery(document).scrollTop()
+		viewHeight = jQuery(window).height()
+		jQuery('.path-dot').each(->
+			if jQuery(this).data('toppos') < (scrollPos + viewHeight * dotsAppearPos)
+				jQuery(this).fadeIn(dotsAppearAnim)
+			else
+				jQuery(this).fadeOut(dotsAppearAnim)
+		)
+
+	@initCoord: ->
+		viewWidth = jQuery(window).width()
+		if viewWidth >= 880
+			coordTracker = []
+			jQuery('.node-story .story-part').each(->
+				type = ''
+				xCoorTarget = 0
+				yCoorTarget = 0
+				xCoorControlNext = 0
+				yCoorControlNext = 0
+				xCoorControlPrev = 0
+				yCoorControlPrev = 0
+				innerStoryPart = jQuery(this).find('.story-text')
+				innerPadding = Math.round((innerStoryPart.outerHeight() - innerStoryPart.height()) / 2)
+				topEdge = Math.round(innerStoryPart.offset().top)
+				vertCenter = Math.round(innerStoryPart.offset().top + (innerStoryPart.height() / 2))
+				bottomEdge = Math.round(innerStoryPart.offset().top + innerStoryPart.height())
+				nextStoryPart = jQuery(this).next().find('.story-text')
+				prevStoryPart = jQuery(this).prev().find('.story-text')
+				if nextStoryPart.length > 0
+					nextTopEdge = Math.round(nextStoryPart.offset().top)
+				if prevStoryPart.length > 0
+					prevBottomEdge = Math.round(prevStoryPart.offset().top + prevStoryPart.height())
+				if jQuery(this).hasClass('path-target-left')
+					type = 'target'
+					xCoorTarget = vertCenter
+					yCoorTarget = Math.round(viewWidth * 0.25)
+					xCoorControlNext = nextTopEdge + randAdjust()
+					yCoorControlNext = Math.round(viewWidth * 0.25) + randAdjust()
+					xCoorControlPrev = prevBottomEdge + randAdjust()
+					yCoorControlPrev = Math.round(viewWidth * 0.25) + randAdjust()
+				if jQuery(this).hasClass('path-target-right')
+					type = 'target'
+					xCoorTarget = vertCenter
+					yCoorTarget = Math.round(viewWidth * 0.75)
+					xCoorControlNext = nextTopEdge + randAdjust()
+					yCoorControlNext = Math.round(viewWidth * 0.75) + randAdjust()
+					xCoorControlPrev = prevBottomEdge + randAdjust()
+					yCoorControlPrev = Math.round(viewWidth * 0.75) + randAdjust()
+				if jQuery(this).hasClass('path-target-center')
+					type = 'target'
+					xCoorTarget = vertCenter
+					yCoorTarget = Math.round(viewWidth * 0.5)
+					xCoorControlNext = nextTopEdge + randAdjust()
+					yCoorControlNext = Math.round(viewWidth * 0.5) + randAdjust()
+					xCoorControlPrev = prevBottomEdge + randAdjust()
+					yCoorControlPrev = Math.round(viewWidth * 0.5) + randAdjust()
+				if jQuery(this).hasClass('path-start-left')
+					type = 'start'
+					xCoorTarget = bottomEdge
+					yCoorTarget = Math.round(viewWidth * 0.25)
+					xCoorControlNext = nextTopEdge + randAdjust(true)
+					yCoorControlNext = Math.round(viewWidth * 0.25) + randAdjust(true)
+				if jQuery(this).hasClass('path-start-right')
+					type = 'start'
+					xCoorTarget = bottomEdge
+					yCoorTarget = Math.round(viewWidth * 0.75)
+					xCoorControlNext = nextTopEdge + randAdjust(true)
+					yCoorControlNext = Math.round(viewWidth * 0.75) + randAdjust(true)
+				if jQuery(this).hasClass('path-start-center')
+					type = 'start'
+					xCoorTarget = bottomEdge
+					yCoorTarget = Math.round(viewWidth * 0.5)
+					xCoorControlNext = nextTopEdge + randAdjust(true)
+					yCoorControlNext = Math.round(viewWidth * 0.5) + randAdjust(true)
+				if jQuery(this).hasClass('path-end-left')
+					type = 'end'
+					xCoorTarget = topEdge
+					yCoorTarget = Math.round(viewWidth * 0.25)
+					xCoorControlPrev = prevBottomEdge
+					yCoorControlPrev = Math.round(viewWidth * 0.25)
+				if jQuery(this).hasClass('path-end-right')
+					type = 'end'
+					xCoorTarget = topEdge
+					yCoorTarget = Math.round(viewWidth * 0.75)
+					xCoorControlPrev = prevBottomEdge
+					yCoorControlPrev = Math.round(viewWidth * 0.75)
+				if jQuery(this).hasClass('path-end-center')
+					type = 'end'
+					xCoorTarget = topEdge
+					yCoorTarget = Math.round(viewWidth * 0.5)
+					xCoorControlPrev = prevBottomEdge
+					yCoorControlPrev = Math.round(viewWidth * 0.5)
+				coordObject = {}
+				coordObject.type = type
+				coordObject.xCoorTarget = xCoorTarget
+				coordObject.yCoorTarget = yCoorTarget
+				coordObject.xCoorControlNext = xCoorControlNext
+				coordObject.yCoorControlNext = yCoorControlNext
+				coordObject.xCoorControlPrev = xCoorControlPrev
+				coordObject.yCoorControlPrev = yCoorControlPrev
+				coordObject.topEdge = topEdge
+				coordObject.bottomEdge = bottomEdge
+				coordTracker.push(coordObject)
+			)
+			addDots(coordTracker)
+
+	addDots = (coords) ->
+		for coord in coords
+			targetPoint = jQuery('<div class="target-dot">&nbsp;</div>')
+			nextControlPoint = jQuery('<div class="next-control-dot">&nbsp;</div>')
+			prevControlPoint = jQuery('<div class="prev-control-dot">&nbsp;</div>')
+			#jQuery('div.inner-page').append(targetPoint)
+			#jQuery('div.inner-page').append(nextControlPoint)
+			#jQuery('div.inner-page').append(prevControlPoint)
+			targetPoint.css(
+				top: coord.xCoorTarget
+				left: coord.yCoorTarget
+			)
+			nextControlPoint.css(
+				top: coord.xCoorControlNext
+				left: coord.yCoorControlNext
+			)
+			prevControlPoint.css(
+				top: coord.xCoorControlPrev
+				left: coord.yCoorControlPrev
+			)
+			if _i < coords.length - 1
+				points =
+					Ax: coord.xCoorTarget + globalShift
+					Ay: coord.yCoorTarget
+					Bx: coord.xCoorControlNext + globalShift
+					By: coord.yCoorControlNext
+					Cx: coords[_i+1].xCoorControlPrev + globalShift
+					Cy: coords[_i+1].yCoorControlPrev
+					Dx: coords[_i+1].xCoorTarget + globalShift
+					Dy: coords[_i+1].yCoorTarget
+					start: coord.bottomEdge + globalShift
+					stop: coords[_i+1].topEdge
+				renderDotPath(points, coord.type, coords[_i+1].type)
+
+	renderDotPath = (points, type, nextType) ->
+		t = 0
+		actualDots = dotsPerPath
+		if nextType is 'end'
+			actualDots = Math.round(dotsPerPath / 2)
+		tSpace = 1 / (actualDots - 1)
+		for [0...actualDots]
+			B0_t = Math.pow(1-t, 3)
+			B1_t = 3 * t * Math.pow(1-t, 2)
+			B2_t = 3 * Math.pow(t, 2) * (1-t)
+			B3_t = Math.pow(t, 3)
+			py_t = (B0_t * points.Ax) + (B1_t * points.Bx) + (B2_t * points.Cx) + (B3_t * points.Dx)
+			px_t = (B0_t * points.Ay) + (B1_t * points.By) + (B2_t * points.Cy) + (B3_t * points.Dy)
+			t += tSpace
+			if py_t > points.start and py_t < points.stop
+				pathPoint = jQuery('<div class="path-dot">&nbsp;</div>')
+				jQuery('div.inner-page').append(pathPoint)
+				pathPoint.data('toppos', py_t)
+				pathPoint.css(
+					top: py_t
+					left: px_t
+				)
+
+	randAdjust = (half = false) ->
+		divider = 1
+		if half then divider = 2
+		randomAmount = Math.round( (Math.random() * randomizeAmount - (randomizeAmount / 2)) / divider )
+		return randomAmount

@@ -1,0 +1,87 @@
+.code-section {
+	padding: 0;
+}
+
+.code-zone {
+	.languages {
+		text-align: center;
+		margin: 24px 12px 0 12px;
+		.language {
+			position: relative;
+			display: inline-block;
+			width: 72px;
+			margin: 16px 12px 0 12px;
+			img {
+				display: inline-block;
+				width: 64px;
+				height: 64px;
+			}
+			.count {
+				position: absolute;
+				top: -8px;
+				right: -8px;
+				width: 18px;
+				height: 18px;
+				font-size: 12px;
+				font-weight: 400;
+				line-height: 18px;
+				color: $white;
+				text-align: center;
+				border-radius: 9px;
+				background: $orange;
+			}
+			.title {
+				padding: 2px 8px;
+				margin: 0 auto;
+				font-size: 10px;
+				font-weight: 700;
+				color: $white;
+				background: $blue;
+				border-bottom: 2px solid $white;
+				-moz-transition: opacity .5s ease-in-out;
+				-webkit-transition: opacity .5s ease-in-out;
+				transition: opacity .5s ease-in-out;
+				opacity: 0;
+			}
+			&:hover {
+				.title {
+					opacity: 1;
+				}
+			}
+			&.active {
+				.title {
+					opacity: 1;
+					border-color: $orange;
+				}
+			}
+		}
+	}
+	.sample-list {
+		text-align: center;
+		margin: 0;
+		padding: 24px 12px 16px 12px;
+		background: $blue;
+		border-top: 2px solid $orange;
+		a {
+			display: inline-block;
+			padding: 4px 16px;
+			margin: 6px;
+			background: $white;
+			border-radius: 4px;
+			&.active, &:hover {
+				color: $orange;
+			}
+		}
+	}
+	.sample-detail {
+		padding: 0 24px;
+		color: $white;
+		background: $blue;
+		p {
+			margin: 0;
+		}
+	}
+	.code {
+		border: 8px solid $blue;
+	}
+}

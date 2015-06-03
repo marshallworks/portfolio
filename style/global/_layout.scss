@@ -1,0 +1,16 @@
+body {
+	background: $white url(/assets/imgs/MW_Background.png);
+}
+
+section {
+	padding: 10px 16px;
+	margin-bottom: 32px;
+	border: 1px solid $light-blue;
+	background: $white;
+}
+
+.content {
+	width: 92%;
+	max-width: 950px;
+	margin: 40px auto;
+}

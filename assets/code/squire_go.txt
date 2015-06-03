@@ -1,0 +1,95 @@
+package controllers
+
+import (
+	"log"
+	"squire/models"
+)
+
+func ListPeople(ctx *models.Context) {
+	people, err := models.GetAllPeople()
+	if err != nil {
+		ctx.Flash.Warning("No People found.")
+	}
+	ctx.Data["Title"] = "People"
+	ctx.Data["Headline"] = "List of all the People"
+	ctx.Data["People"] = people
+	ctx.HTML(200, "people/list")
+}
+
+func NewPerson(ctx *models.Context) {
+	ctx.Data["Title"] = "New Person"
+	ctx.Data["Headline"] = "Create a new Person"
+	ctx.HTML(200, "people/new")
+}
+
+func CreatePerson(ctx *models.Context, person models.PersonForm) {
+	p := models.NewPerson(person.Name, person.Moniker, person.Email, person.Password)
+	err := p.Create()
+	if err != nil {
+		ctx.Flash.Error("Person did not create.")
+	} else {
+		ctx.Flash.Success("Person created.")
+	}
+	ctx.Redirect("/admin/people")
+}
+
+func ViewPerson(ctx *models.Context) {
+	identifier := ctx.Params(":identifier")
+	person, err := models.GetPersonByIdentifier(identifier)
+	if err != nil {
+		ctx.Flash.Warning("Person: " + identifier + ", not found.")
+		ctx.Redirect("/admin/people")
+	} else {
+		ctx.Data["Title"] = "View Person"
+		ctx.Data["Headline"] = "View a Person"
+		ctx.Data["Person"] = person
+		ctx.HTML(200, "people/view")
+	}
+}
+
+func EditPerson(ctx *models.Context) {
+	identifier := ctx.Params(":identifier")
+	person, err := models.GetPersonByIdentifier(identifier)
+	if err != nil {
+		ctx.Flash.Warning("Person: " + identifier + ", not found.")
+		ctx.Redirect("/admin/people")
+	} else {
+		ctx.Data["Title"] = "Edit Person"
+		ctx.Data["Headline"] = "Edit a Person"
+		ctx.Data["Person"] = person
+		ctx.HTML(200, "people/edit")
+	}
+}
+
+func UpdatePerson(ctx *models.Context, person models.PersonForm) {
+	identifier := ctx.Params(":identifier")
+	p, err := models.GetPersonByIdentifier(identifier)
+	if err != nil {
+		ctx.Flash.Warning("Person: " + identifier + ", not found.")
+	} else {
+		err = p.Update(person.Name, person.Moniker, person.Email, person.Admin, person.Password)
+		if err != nil {
+			ctx.Flash.Error("Person did not update.")
+		} else {
+			ctx.Flash.Success("Person updated.")
+		}
+	}
+	ctx.Redirect("/admin/people")
+}
+
+func DeletePerson(ctx *models.Context) {
+	identifier := ctx.Params(":identifier")
+	person, err := models.GetPersonByIdentifier(identifier)
+	if err != nil {
+		ctx.Flash.Warning("Person: " + identifier + ", not found.")
+	} else {
+		err = person.Delete()
+		if err != nil {
+			log.Println(err)
+			ctx.Flash.Error("Person was not deleted.")
+		} else {
+			ctx.Flash.Success("Person deleted.")
+		}
+	}
+	ctx.Redirect("/admin/people")
+}

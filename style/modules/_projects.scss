@@ -1,0 +1,65 @@
+.projects {
+	position: relative;
+	padding: 0;
+	.client-logos {
+		position: relative;
+		text-align: center;
+		overflow: hidden;
+		&.open {
+			.list {
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+			.arrow {
+				position: absolute;
+				bottom: 0px;
+				left: calc(50% - 17px);
+				width: 0;
+				height: 0;
+				border-style: solid;
+				border-width: 0 17px 22px 17px;
+				border-color: transparent transparent $blue transparent;
+			}
+		}
+	}
+	.focus {
+		position: relative;
+		background-color: $blue;
+		color: $white;
+		overflow: hidden;
+		.screens {
+			text-align: center;
+			img {
+				display: inline-block;
+				margin: 16px 0;
+				max-width: 96%;
+			}
+		}
+	}
+	.focus-content {
+		padding: 22px;
+	}
+	.close {
+		display: block;
+		position: absolute;
+		top: 22px;
+		right: 22px;
+	}
+	.project {
+		display: inline-block;
+		.logo {
+			width: 128px;
+			height: 128px;
+			margin: 0 12px;
+			img {
+				display: block;
+				max-width: 100%;
+				max-height: 100%;
+			}
+		}
+		.detail {
+			display: none;
+		}
+	}
+}

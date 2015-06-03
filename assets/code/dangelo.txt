@@ -1,0 +1,36 @@
+<div class="main-location">
+	<h3 class="loc-name">Select Location - <a href="#locations_all">All Locations</a></h3>
+	<div class="location-detail">
+		<ul class="unstyled location-address">
+			<li class="loc-addr"></li>
+			<li class="loc-cit-st"></li>
+			<li><a href="" class="loc-pho-call unstyled">{{ location.phone }}<strong class="loc-pho"></strong></a></li>
+		</ul>
+		<table class="location-hours">
+			<thead>
+				<tr>
+					<th colspan="3">Hours</th>
+				</tr>
+			</thead>
+			<tbody class="hours"></tbody>
+		</table>
+	</div>
+	<br>
+</div>
+<div class="locations-map">
+	<div id="map-canvas" class="google-map"></div>
+	<div class="locations-list">
+	{% for location in locations %}
+		<div id="{{ location.id }}" class="location-item"><br>
+			<strong>{{ location.name }} - {{ location.id }}</strong>
+			<ul class="unstyled address">
+				<li><small>{{ location.address }}</small></li>
+				<li><small>{{ location.city }}, {{ location.state }} {{ location.postal }}</small></li>
+				<li><a href="tel:{{ location.phone | replace('(', '') | replace(')', '') | replace(' ', '-') }}" class="unstyled"><em>{{ location.phone }}</em></a></li>
+				<li><a href="#" class="unstyled"><br>Order From Here&nbsp;<span class="icon-cart"></span></a></li>
+				<li><hr></li>
+			</ul>
+		</div>
+	{% endfor %}
+	<br>
+</div>

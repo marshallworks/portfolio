@@ -1,0 +1,463 @@
+class Bertuccis.Location
+	_init = false
+	searchDistance = 120
+	searchUnit = 3959
+	mapAnimTime = 320
+	originSearch =
+		userInput: null
+		latlon: null
+		queryValue: null
+	elements =
+		block: '.header-location-block'
+		blockSearch: '#block-views-exp-nearby-locations-page'
+		locTop: '#location-top'
+		locMiddle: '#location-middle'
+		locBottom: '#location-bottom'
+		locText: '.current-location'
+		locName: '.location-name'
+		locDetails: '.location-details'
+		changeLoc: '#change-location-form'
+		searchLoc: '#edit-field-geofield-distance-origin'
+		orderLoc: '#order-from-location'
+	state =
+		locationSlug: ''
+		geoLocation:
+			lon: null
+			lat: null
+		selectedLocation: null
+		address: null
+		hours: null
+		amenitiesArray: []
+		mapVisible: false
+		detailsVisible: false
+		changeFormVisible: false
+		orderFromVisible: true
+		myOven: false
+	constructor: (@attributes) ->
+		if not _init
+			checkLocation()
+			locationBindings()
+			setLinkContext()
+			if navigator.geolocation
+				jQuery(elements.block + ' ' + '.icon-gpsoff').removeClass('.icon-gpsoff').addClass('icon-gpson')
+				jQuery('a.find-my-current-location span').removeClass('icon-gpsoff').addClass('icon-gpson')
+
+			if originSearch.queryValue = getURLSearchParam('field_geofield_distance_user')
+				jQuery(elements.blockSearch).find('input'+elements.searchLoc).val(originSearch.queryValue)
+
+			_init = true
+			return Bertuccis.Location.statusReport()
+		else
+			console.log('Location already initialized.')
+
+	@statusReport: () ->
+		_init: _init
+		searchDistance: searchDistance
+		searchUnit: searchUnit
+		mapAnimTime: mapAnimTime
+		elements: elements
+		state: state
+
+	locationBindings = ->
+		jQuery('button#change-location').on('click',(event) ->
+			event.preventDefault()
+			switchState('change-location')
+		)
+		jQuery(elements.block + ' ' + elements.changeLoc + ' input[type="submit"]').on('click',(event) ->
+			event.preventDefault()
+			showUserString = false
+			searchParam = jQuery(elements.block + ' ' + elements.changeLoc + ' input[type="text"]').val()
+			if searchParam isnt ''
+				if locales isnt null
+					result = matchLocation(searchParam)
+					if result isnt null
+						searchParam = result
+						goToNearbySearch(searchParam)
+					else
+						geoLocateOrigin(searchParam, goToNearbySearch)
+
+			else
+				top.location = '/locations'
+		)
+		jQuery(elements.blockSearch).find('input[type=submit]').on('click',(event) ->
+			event.preventDefault()
+			searchField = jQuery(elements.blockSearch).find('input'+elements.searchLoc)
+			searchParam = searchField.val()
+			if searchParam isnt ''
+				if locales isnt null
+					result = matchLocation(searchParam)
+					if result isnt null
+						searchField.val(result)
+					else
+						geoLocateOrigin(searchParam, updateSearchBlock)
+				else
+					geoLocateOrigin(searchParam, updateSearchBlock)
+			else
+				return false
+		)
+		jQuery(elements.block + ' ' + 'button#find-location').on('click',(event) ->
+			event.preventDefault()
+			getDevicePosition()
+		)
+		jQuery('a.find-my-current-location').on('click',(event) ->
+			event.preventDefault()
+			getDevicePosition()
+		)
+		jQuery('.location-name, .location-map img, .location-information').on('click', ->
+			top.location = '/locations/' + state.locationSlug
+		)
+		jQuery('button#default-location, button.default-location').on('click', (event) ->
+			event.preventDefault()
+			jQuery(this).addClass('selected')
+			setMyOven(jQuery(this).data('longitude'), jQuery(this).data('latitude'))
+		)
+
+	@testGivenLocation: (passedSlug = false) ->
+		state.locationLatLon = false
+		state.locationSlug = passedSlug
+		getJsonData(false)
+
+	goToNearbySearch = (searchParam = false) ->
+		if originSearch.latlon isnt null
+			searchParam = originSearch.latlon
+			showUserString = true
+
+		if searchParam.length
+			searchString = 'field_geofield_distance%5Bdistance%5D=' + searchDistance + '&field_geofield_distance%5Bunit%5D=' + searchUnit + '&field_geofield_distance%5Borigin%5D=' + escape(searchParam)
+			if showUserString
+				searchString += '&field_geofield_distance_user='+originSearch.userInput
+
+			top.location = '/nearby-locations?' + searchString
+
+	checkLocation = ->
+		state.locationLatLon = getCookieValue('loclatlon')
+		state.locationSlug = getCookieValue('slug')
+		state.myOven = getCookieValue('myoven')
+		if state.locationLatLon and state.myOven
+			getFromLocalstorage()
+		else if state.locationLatLon
+			getFromLocalstorage(false)
+		else
+			getJsonData(false)
+
+	matchLocation = (city) ->
+		city = city.toLowerCase()
+		if typeof locales[city] isnt 'undefined'
+			return locales[city]
+		return null
+
+	setMyOven = (longitude, latitude) ->
+		state.locationLatLon = longitude + ',' + latitude
+		if window.location.pathname
+			if window.location.pathname.indexOf('/locations/') > -1
+				state.locationSlug = window.location.pathname.substring(window.location.pathname.indexOf('/locations/') + 11, window.location.pathname.length)
+		getJsonData(true)
+
+	getJsonData = (myOvenSelected = false) ->
+		locationUrl = '/nearest-location'
+		if state.locationLatLon
+			locationUrl += '?loc=' + state.locationLatLon
+		else if state.locationSlug
+			locationUrl += '?loc=' + state.locationSlug
+		switchState('getting-location')
+		jQuery.ajax(
+			url: locationUrl
+		).done((data) ->
+			if data.errors.length > 0
+				switchState('no-location')
+			else
+				state.selectedLocation = data.data.node
+				state.geoLocation.lon = data.data.node.field_geofield.und[0].lon
+				state.geoLocation.lat = data.data.node.field_geofield.und[0].lat
+				state.locationLatLon = state.geoLocation.lon + ',' + state.geoLocation.lat
+				state.address = data.data.node.field_address.und[0]
+				state.hours = data.data.node.field_hours.und[0].value
+				state.amenitiesArray = data.data.node.field_location_attributes.und
+				state.orderNowLocation = data.data.node.field_order_now_location.und[0].value
+				state.myOven = myOvenSelected
+				setCookieValue('slug', state.locationSlug)
+				setCookieValue('loclatlon', state.locationLatLon)
+				setCookieValue('myoven', state.myOven)
+				saveToLocalstorage()
+				setMenuContext()
+				setLinkContext()
+				disableMyOvenButtons()
+				switchState('has-location')
+		)
+
+	getFromLocalstorage = ->
+		switchState('getting-location')
+		if typeof Storage isnt 'undefined' and localStorage.getItem('locationState')
+			state = JSON.parse(localStorage.getItem('locationState'))
+			setCookieValue('slug', state.locationSlug)
+			setCookieValue('loclatlon', state.locationLatLon)
+			setCookieValue('myoven', state.myOven)
+			setMenuContext()
+			setLinkContext()
+			disableMyOvenButtons()
+			switchState('has-location')
+		else
+			getJsonData(false)
+
+	disableMyOvenButtons = ->
+		if state.myOven and jQuery('button#default-location').length > 0
+			buttonLon = jQuery('button#default-location').data('longitude')
+			buttonLat = jQuery('button#default-location').data('latitude')
+			buttonLon = Math.round(buttonLon * 10000) / 10000
+			buttonLat = Math.round(buttonLat * 10000) / 10000
+			setLon = Math.round(state.geoLocation.lon * 10000) / 10000
+			setLat = Math.round(state.geoLocation.lat * 10000) / 10000
+			if buttonLon is setLon and buttonLat is setLat
+				jQuery('button#default-location').attr('disabled', 'disabled')
+		if state.myOven and jQuery('button.default-location').length > 0
+			jQuery('button.default-location').each(->
+				jQuery(this).removeAttr('disabled')
+				jQuery(this).removeClass('selected')
+				buttonLon = jQuery(this).data('longitude')
+				buttonLat = jQuery(this).data('latitude')
+				buttonLon = Math.round(buttonLon * 10000) / 10000
+				buttonLat = Math.round(buttonLat * 10000) / 10000
+				setLon = Math.round(state.geoLocation.lon * 10000) / 10000
+				setLat = Math.round(state.geoLocation.lat * 10000) / 10000
+				if buttonLon is setLon and buttonLat is setLat
+					jQuery(this).attr('disabled', 'disabled')
+			)
+
+	saveToLocalstorage = ->
+		if typeof Storage isnt 'undefined'
+			localStorage.setItem('locationState', JSON.stringify(state))
+
+	setMenuContext = ->
+		context =
+			connecticutLocation: false
+			newyorkLocation: false
+			newjerseyLocation: false
+			partialBarLocation: false
+		if state.address.administrative_area is 'CT'
+			context.connecticutLocation = true
+		if state.address.administrative_area is 'NY'
+			context.newyorkLocation = true
+		if state.address.administrative_area is 'NJ'
+			context.newjerseyLocation = true
+		if state.selectedLocation.attributes and state.selectedLocation.attributes.length > 0
+			for attribute in state.selectedLocation.attributes
+				if attribute.hasOwnProperty('value')
+					if attribute.value is 'Partial Bar'
+						context.partialBarLocation = true
+		Bertuccis.Menu.locationContext(context)
+
+	setLinkContext = ->
+		oloMenuType = 'Bertuccis'
+		browserContext = IHWW.ContextDetector.getProperties()
+		if browserContext.isMobile then oloMenuType = 'BertuccisMobile'
+		if state.myOven and not checkHoliday() and not browserContext.isMobile
+			jQuery(elements.block + ' ' + 'button#order-now, div.order-now-tab a').on('click',(event) ->
+				event.preventDefault()
+				top.location = 'http://olo.bertuccis.mymicros.net/' + oloMenuType + '/en-US/Bertucci/Bertucci/' + state.orderNowLocation + '/Order'
+			)
+		else if checkHoliday() or browserContext.isMobile
+			jQuery(elements.block + ' ' + 'button#order-now, div.order-now-tab a').on('click',(event) ->
+				event.preventDefault()
+				top.location = 'http://olo.bertuccis.mymicros.net/' + oloMenuType
+			)
+			jQuery('a.direct-button-link').on('click',(event)->
+				event.preventDefault()
+				top.location = 'http://olo.bertuccis.mymicros.net/' + oloMenuType
+			)
+		else
+			jQuery(elements.block + ' ' + 'button#order-now, div.order-now-tab a').on('click',(event) ->
+				event.preventDefault()
+				top.location = 'http://olo.bertuccis.mymicros.net/' + oloMenuType
+			)
+
+	checkHoliday = ->
+		if jQuery('#behavior-control-block').length > 0 and jQuery('#behavior-control-block').data('holiday') is true
+			return true
+		else
+			return false
+
+	getDevicePosition = ->
+		if (navigator.geolocation)
+			switchState('getting-location')
+			navigator.geolocation.getCurrentPosition(setDevicePosition, errorDevicePosition)
+		else
+			console.log('position not supported')
+
+	setDevicePosition = (position) ->
+		searchString = 'nearby-locations?field_geofield_distance%5Bdistance%5D=' + searchDistance + '&field_geofield_distance%5Bunit%5D=' + searchUnit + '&field_geofield_distance%5Borigin%5D=' + position.coords.latitude + ',' + position.coords.longitude
+		top.location = '/nearby-locations?' + searchString
+
+	errorDevicePosition = (error) ->
+		switchState('no-device-location')
+		jQuery(elements.block + ' ' + '.icon-gpson').removeClass('.icon-gpson').addClass('icon-gpsoff')
+
+	setLocCookie = (locString, locLatLon) ->
+		expireDate = new Date()
+		expireDate.setDate(expireDate.getDate() + 120)
+		cookieSlugValue = escape(locString) + '; expires=' + expireDate.toUTCString() + '; path=/'
+		cookieLatLonValue = locLatLon + '; expires=' + expireDate.toUTCString() + '; path=/'
+		document.cookie = 'selectedlocslug=' + cookieSlugValue
+		document.cookie = 'selectedloclatlon=' + cookieLatLonValue
+		state.locationSlug = locString
+		state.locationLatLon = locLatLon
+
+	setMyOvenCookie = (value) ->
+		expireDate = new Date()
+		expireDate.setDate(expireDate.getDate() + 30)
+		cookieMyOvenValue = escape(locString) + '; expires=' + expireDate.toUTCString() + '; path=/'
+		document.cookie = 'myoven=' + cookieMyOvenValue
+		state.myOven = value
+
+	setCookieValue = (key = false, value = false) ->
+		if key and value
+			expireDate = new Date()
+			expireDate.setDate(expireDate.getDate() + 30)
+			cookieValue = escape(value) + '; expires=' + expireDate.toUTCString() + '; path=/'
+			document.cookie = key + '=' + cookieValue
+
+	getCookieValue = (key) ->
+		cookies = document.cookie
+		cookieStart = cookies.indexOf(key + '=')
+		if cookieStart > -1
+			cookieStart = cookies.indexOf('=', cookieStart) + 1
+			cookieEnd = cookies.indexOf(';', cookieStart)
+			if cookieEnd is -1
+				cookieEnd = cookies.length
+			cookieValue = cookies.substring(cookieStart, cookieEnd)
+			if cookieValue isnt null and cookieValue isnt ''
+				return cookieValue
+			else
+				return false
+		else
+			return false
+
+	switchState = (target) ->
+		switch target
+			when 'no-device-location'
+				jQuery(elements.block + ' ' + elements.locName).html('Device Location Not Found')
+				jQuery(elements.block + ' ' + elements.locDetails).empty()
+				showChangeForm()
+			when 'getting-location'
+				jQuery(elements.block + ' ' + elements.locName).html('Checking Location<img src="/sites/all/themes/bertuccis/templates/style/imgs/ajax-loader.gif">')
+				jQuery(elements.block + ' ' + elements.locDetails).empty()
+				showChangeForm()
+			when 'no-location'
+				jQuery(elements.block + ' ' + elements.locName).html('Find a Location')
+				jQuery(elements.block + ' ' + elements.locDetails).empty()
+				showChangeForm()
+			when 'has-location'
+				jQuery(elements.block + ' ' + elements.locName).html(state.selectedLocation.title)
+				showOrderForm()
+				addLocationDetails()
+			when 'change-location'
+				showChangeForm()
+
+	addLocationDetails = () ->
+		mapControl = jQuery('<a href="">Map</a>')
+		detailControl = jQuery('<a href="">Details</a>')
+		mapControl.on('click', (event) ->
+			event.preventDefault()
+			toggleMap()
+		)
+		detailControl.on('click', (event) ->
+			event.preventDefault()
+			toggleDetails()
+		)
+		locationControls = jQuery('<div class="location-controls"></div>')
+		locationControls.append(mapControl)
+		locationControls.append(detailControl)
+		locationMap = jQuery('<div class="location-map"></div>')
+		locationMap.append('<img src="http://staticmap.openstreetmap.de/staticmap.php?center=' + state.geoLocation.lat + ',' + state.geoLocation.lon + '&zoom=16&size=214x214&markers=' + state.geoLocation.lat + ',' + state.geoLocation.lon + ',ol-marker" />')
+		locationDetails = jQuery('<div class="location-information"></div>')
+		locationDetails.append('<h6>Address</h6>')
+		locationDetails.append('<p>' + state.address.thoroughfare + '<br>' + state.address.locality + ', ' + state.address.administrative_area + ' ' + state.address.postal_code + '</p>')
+		locationDetails.append('<h6>Hours</h6>')
+		locationDetails.append(state.hours)
+		if state.amenitiesArray.length > 0
+			locationDetails.append('<h6>Amenities</h6>')
+			amenityList = jQuery('<ul></ul>')
+			for amenity in state.amenitiesArray
+				amenityList.append('<li>' + amenity.value + '</li>')
+			locationDetails.append(amenityList)
+		jQuery(elements.block + ' ' + elements.locDetails).append(locationControls)
+		jQuery(elements.block + ' ' + elements.locDetails).append(locationMap)
+		jQuery(elements.block + ' ' + elements.locDetails).append(locationDetails)
+		locationMap.slideUp(1)
+		locationDetails.slideUp(1)
+
+	showChangeForm = () ->
+		if not state.changeFormVisible
+			jQuery(elements.block + ' ' + elements.orderLoc).hide()
+			state.orderFromVisible = false
+			jQuery(elements.block + ' ' + elements.changeLoc).show()
+			state.changeFormVisible = true
+
+	showOrderForm = () ->
+		if not state.orderFromVisible
+			jQuery(elements.block + ' ' + elements.changeLoc).hide()
+			state.changeFormVisible = false
+			jQuery(elements.block + ' ' + elements.orderLoc).show()
+			state.orderFromVisible = true
+
+	toggleMap = ->
+		if state.mapVisible
+			closeMap()
+		else
+			openMap()
+
+	closeMap = ->
+		if state.mapVisible
+			jQuery('div.location-map').slideUp(mapAnimTime)
+			state.mapVisible = false
+
+	openMap = ->
+		if not state.mapVisible
+			closeDetails()
+			jQuery('div.location-map').slideDown(mapAnimTime)
+			state.mapVisible = true
+
+	toggleDetails = ->
+		if state.detailsVisible
+			closeDetails()
+		else
+			openDetails()
+
+	closeDetails = ->
+		if state.detailsVisible
+			jQuery('div.location-information').slideUp(mapAnimTime)
+			state.detailsVisible = false
+
+	openDetails = ->
+		if not state.detailsVisible
+			closeMap()
+			jQuery('div.location-information').slideDown(mapAnimTime)
+			state.detailsVisible = true
+
+	geoLocateOrigin = (origin, callback = null) ->
+		apiLoc = "http://maps.googleapis.com/maps/api/geocode/json?"
+		jQuery.getJSON(apiLoc, { address: origin } ).done( (data) ->
+			if data.results
+				geometry = data.results[0].geometry
+				if typeof geometry isnt "undefined"
+					location = geometry.location
+					latitude = location.lat
+					longitude = location.lng
+					updateOriginSearch(latitude + ',' + longitude, origin)
+					callback?()
+		)
+
+	updateOriginSearch = (latlon, user) ->
+		originSearch.latlon = latlon
+		originSearch.userInput = user
+		return true
+
+	updateSearchBlock = () ->
+		form = jQuery(elements.blockSearch).find('form')
+		form.find('input' + elements.searchLoc).val(originSearch.latlon)
+		jQuery('<input />').attr({ type: 'hidden', name: 'field_geofield_distance_user' }).val(originSearch.userInput).appendTo(form)
+
+		jQuery(elements.blockSearch).find('form').submit()
+
+	getURLSearchParam = (name) ->
+    	match = RegExp('[?&]' + name + '=([^&]*)').exec(unescape(window.location.search))
+    	return match && decodeURIComponent(match[1].replace(/\+/g, ' '))

@@ -1,0 +1,28 @@
+{
+  "name": "marshallworks",
+  "version": "7.0.0",
+  "description": "MarshallWorks portfolio.",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marshallworks/portfolio"
+  },
+  "keywords": [
+    "portfolio"
+  ],
+  "author": "Gregory Marshall",
+  "license": "Gregory Marshall",
+  "devDependencies": {
+    "del": "^1.2.0",
+    "gulp": "^3.8.11",
+    "gulp-changed": "^1.2.1",
+    "gulp-livereload": "^3.8.0",
+    "gulp-sass": "^2.0.1",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-util": "^3.0.4",
+    "node-static": "^0.7.6"
+  }
+}

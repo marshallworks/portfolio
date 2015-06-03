@@ -1,0 +1,11 @@
+footer.main {
+	display: block;
+	padding: 8px 24px;
+	text-align: right;
+	background: $white;
+	border-top: 2px solid $blue;
+	.copyright {
+		font-size: 12px;
+		line-height: 18px;
+	}
+}

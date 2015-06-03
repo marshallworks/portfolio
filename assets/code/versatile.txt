@@ -1,0 +1,988 @@
+class window.Versatile
+	_init = false
+	resizeTO = undefined
+	scrollTO = undefined
+	storyAnimSpeed = 980
+	slideAnimSpeed = 960
+	menuAnimSpeed = 320
+	mobileMenuActive = false
+	smallBreakpoint = 430
+	mobileBreakpoint = 720
+	tabletBreakpoint = 960
+	fullBreakpoint = 1024
+	smallSize = false
+	mobileSize = false
+	tabletSize = false
+	fullSize = false
+	sizeTracking = []
+	storyStatus = 'cioit'
+	storyPositions = {}
+	storyDefaults =
+		'430':
+			cioit:
+				CIOImage:
+					left: '30%'
+				CIOMessage:
+					width: '35%'
+				ITImage:
+					right: '30%'
+				ITMessage:
+					width: '38%'
+			cio:
+				CIOImage:
+					left: '12%'
+					width: '220px'
+				CIOTeaser:
+					left: '30%'
+				CIOMessage:
+					left: '62%'
+					width: '35%'
+				ITImage:
+					right: '-50%'
+			it:
+				CIOImage:
+					left: '-50%'
+				ITImage:
+					right: '12%'
+					width: '200px'
+				ITMessage:
+					right: '60%'
+					width: '38%'
+		'720':
+			cioit:
+				CIOImage:
+					left: '40%'
+					width: '220px'
+				CIOTeaser:
+					top: '10px'
+					left: '54px'
+				CIOTeaserText:
+					opacity: '0'
+				CIOMessage:
+					width: '110px'
+				ITImage:
+					right: '40%'
+					width: '195px'
+				ITTeaser:
+					bottom: '298px'
+					right: '64px'
+				ITTeaserText:
+					opacity: '0'
+				ITMessage:
+					width: '110px'
+				CIOITRibbon:
+					left: '10%'
+					width: '60%'
+					opacity: '1'
+			cio:
+				CIOImage:
+					left: '16%'
+					width: '240px'
+				CIOTeaser:
+					top: '10px'
+					left: '35%'
+				CIOTeaserText:
+					opacity: '1'
+				CIOMessage:
+					width: '40%'
+					bottom: '44px'
+					left: '50%'
+				ITImage:
+					right: '-50%'
+					width: '196px'
+				ITTeaser:
+					bottom: '248px'
+					right: '64px'
+				ITTeaserText:
+					opacity: '0'
+				CIOITRibbon:
+					opacity: '0'
+			it:
+				CIOImage:
+					left: '-50%'
+					width: '196px'
+				CIOTeaser:
+					top: '96px'
+					left: '64px'
+				CIOTeaserText:
+					opacity: '0'
+				ITImage:
+					right: '15%'
+					width: '240px'
+				ITTeaser:
+					bottom: '350px'
+					right: '32%'
+				ITTeaserText:
+					opacity: '1'
+				ITMessage:
+					width: '30%'
+					bottom: '24px'
+					right: '50%'
+				CIOITRibbon:
+					opacity: '0'
+		'960':
+			cioit:
+				CIOImage:
+					#left: '51%'
+					left: '47%'
+				CIOTeaser:
+					width: '150px'
+					top: '88px'
+					left: '64px'
+				ITImage:
+					#right: '55%'
+					right: '50%'
+				ITTeaser:
+					width: '150px'
+					right: '64px'
+					bottom: '384px'
+			cio:
+				CIOImage:
+					#left: '23%'
+					left: '21%'
+				ITImage:
+					#right: '0%'
+					right: '7%'
+				CIOMessage:
+					#left: '280px'
+					left: '285px'
+					width: '315px'
+			it:
+				CIOImage:
+					#left: '0%'
+					left: '7%'
+				ITImage:
+					right: '23%'
+				ITMessage:
+					#right: '280px'
+					right: '32%'
+					width: '44%'
+		'1024':
+			cioit:
+				CIOImage:
+					width: '342px'
+					bottom: '0px'
+					#left: '43%'
+					left: '41%'
+				CIOTeaser:
+					top: '100px'
+					left: '88px'
+					opacity: '1'
+				CIOTeaserText:
+					opacity: '1'
+				CIOTeaserArrow:
+					opacity: '1'
+					width: '64px'
+					height: '64px'
+				CIOTeaserBar:
+					width: '0px'
+				CIOMessage:
+					bottom: '124px'
+					left: '-404px'
+					width: '404px'
+				ITImage:
+					bottom: '0px'
+					#right: '52%'
+					right: '52%'
+					width: '303px'
+				ITTeaser:
+					bottom: '64px'
+					right: '74px'
+					opacity: '1'
+				ITTeaserText:
+					opacity: '1'
+				ITTeaserArrow:
+					opacity: '1'
+					width: '64px'
+					height: '64px'
+				ITTeaserBar:
+					width: '0px'
+				ITMessage:
+					bottom: '124px'
+					right: '-404px'
+					width: '404px'
+				CIOITRibbon:
+					left: '18%'
+					width: '48%'
+					opacity: '1'
+				CIOITRibbonHanging:
+					right: '-40px'
+				CIOITRibbonHangingTriangle:
+					right: '-40px'
+			cio:
+				CIOImage:
+					width: '342px'
+					bottom: '0px'
+					left: '21%'
+				CIOTeaser:
+					top: '20px'
+					left: '21%'
+					opacity: '1'
+				CIOTeaserText:
+					opacity: '1'
+				CIOTeaserArrow:
+					opacity: '0'
+					width: '0px'
+					height: '0px'
+				CIOTeaserBar:
+					width: '84px'
+				CIOMessage:
+					bottom: '144px'
+					left: '345px'
+					width: '404px'
+				ITImage:
+					bottom: '0px'
+					#right: '1%'
+					right: '7%'
+					width: '303px'
+				ITTeaser:
+					bottom: '482px'
+					right: '9%'
+					opacity: '0.6'
+				ITTeaserText:
+					opacity: '1'
+				ITTeaserArrow:
+					opacity: '1'
+					width: '64px'
+					height: '64px'
+				ITTeaserBar:
+					width: '0px'
+				ITMessage:
+					bottom: '124px'
+					right: '-404px'
+					width: '404px'
+				CIOITRibbon:
+					left: '0%'
+					width: '75%'
+					opacity: '1'
+				CIOITRibbonHanging:
+					right: '-40px'
+				CIOITRibbonHangingTriangle:
+					right: '-40px'
+			it:
+				CIOImage:
+					width: '342px'
+					bottom: '0px'
+					#left: '1%'
+					left: '5%'
+				CIOTeaser:
+					top: '20px'
+					left: '8%'
+					opacity: '0.6'
+				CIOTeaserText:
+					opacity: '1'
+				CIOTeaserArrow:
+					opacity: '1'
+					width: '64px'
+					height: '64px'
+				CIOTeaserBar:
+					width: '0px'
+				CIOMessage:
+					bottom: '124px'
+					left: '-404px'
+					width: '404px'
+				ITImage:
+					bottom: '0px'
+					right: '18%'
+					width: '303px'
+				ITTeaser:
+					bottom: '482px'
+					right: '18%'
+					opacity: '1'
+				ITTeaserText:
+					opacity: '1'
+				ITTeaserArrow:
+					opacity: '0'
+					width: '0px'
+					height: '0px'
+				ITTeaserBar:
+					width: '84px'
+				ITMessage:
+					bottom: '124px'
+					right: '320px'
+					width: '404px'
+				CIOITRibbon:
+					left: '25%'
+					width: '75%'
+					opacity: '1'
+				CIOITRibbonHanging:
+					right: ['75%', -13]
+				CIOITRibbonHangingTriangle:
+					right: ['75%', -13]
+	slidesArray = []
+	slideMoveArray = []
+	currentSlide = 0
+
+
+	constructor: (@attributes) ->
+		if typeof jQuery isnt 'undefined'
+			$(document).ready(->
+				if not _init
+					_init = true
+					menuBindings()
+					cioitBindings()
+					initSuccessSlideshow()
+					initYouTubeVideos()
+					initSizeTracking(->
+						initCIOITStory(->
+							initCIOITSlideshow(->
+								Versatile.switchCIOITState(1, false)
+							)
+						)
+						initMobileMenu()
+					)
+					if $('body').hasClass('IE9') or $('body').hasClass('IE8')
+						iePlaceholderFix()
+
+					if navigator.appVersion.indexOf("MSIE 10")!=-1
+						#if $.browser.msie and $.browser.version is 10
+						$("html").addClass("ie10")
+
+					$(window).load(->
+					    if $('#form-confirmation').length > 0 or $('#form-error').length > 0
+						    scrollToElement('#contact-us')
+						if window.location.hash and window.location.hash.indexOf('-link') isnt -1
+							hashLocation = window.location.hash
+							hashLocation = hashLocation.substring(0, hashLocation.length - 5)
+							scrollToElement(hashLocation)
+					)
+					$(window).resize(->
+						setTimeout(->
+							resizeSuccess()
+						, 2000)
+					)
+					#console.log('Versatile has initialized.')
+				else
+					#console.log('Versatile is already initialized.')
+			)
+		else
+			console.log('jQuery is NOT available.')
+		Versatile.statusReport()
+
+	@statusReport: ->
+		_init: _init
+		resizeTO: resizeTO
+		scrollTO: scrollTO
+		storyAnimSpeed: storyAnimSpeed
+		slideAnimSpeed: slideAnimSpeed
+		menuAnimSpeed: menuAnimSpeed
+		mobileMenuActive: mobileMenuActive
+		smallBreakpoint: smallBreakpoint
+		mobileBreakpoint: mobileBreakpoint
+		tabletBreakpoint: tabletBreakpoint
+		smallSize: smallSize
+		mobileSize: mobileSize
+		tabletSize: tabletSize
+		fullSize: fullSize
+		sizeTracking: sizeTracking
+		storyStatus: storyStatus
+		storyPositions: storyPositions
+		storyDefaults: storyDefaults
+		slidesArray: slidesArray
+		slideMoveArray: slideMoveArray
+		currentSlide: currentSlide
+
+	initSizeTracking = (callback) ->
+		#console.log('Initializing Size Tracking.')
+		sizeTracking = []
+		smallSize = if $(window).width() <= smallBreakpoint then true else false
+		mobileSize = if $(window).width() <= mobileBreakpoint then true else false
+		tabletSize = if $(window).width() <= tabletBreakpoint then true else false
+		fullSize = true
+		if fullSize then sizeTracking.push(fullBreakpoint)
+		if tabletSize then sizeTracking.push(tabletBreakpoint)
+		if mobileSize then sizeTracking.push(mobileBreakpoint)
+		if smallSize then sizeTracking.push(smallBreakpoint)
+		#console.log('Render for: ' + sizeTracking.join(', ') + '.')
+		callback()
+
+	menuBindings = ->
+		if $('.CMSListMenuLinkHighlighted').length > 0
+			$('.CMSListMenuLinkHighlighted').each( ->
+				$(this).parents('.CMSListMenuLI').addClass('active')
+			)
+		$('.welcome-scroll').on('click', ->
+			$('html,body').animate(
+				scrollTop: $('#homepage-welcome').offset().top + $('#homepage-welcome').height()
+			, 420)
+		)
+		$('button#NavigationToggle').on('click', (event) ->
+			event.preventDefault()
+			$(this).toggleClass('opened')
+			$('header.main-page').toggleClass('height-100')
+			$('header.main-page div.center-when-fixed-pos').toggleClass('height-100')
+			$('nav.main-site').slideToggle()
+		)
+		if tabletSize
+			$('nav.main-site').hide()
+		$('.news-title a, .events-title a').on('click', (e) ->
+			el = $(this)
+			link = el.attr('href')
+			window.location = link
+		)
+		if $('#homepage-welcome').length > 0
+			$('a[href="/Solutions-and-Services.aspx"].CMSListMenuLink').on('click', (event) ->
+				event.preventDefault()
+				scrollToElement('#solutions-and-services')
+				if mobileSize then $('button#NavigationToggle').trigger('click')
+			)
+			$('a[href="/Insights.aspx"].CMSListMenuLink').on('click', (event) ->
+				event.preventDefault()
+				scrollToElement('#insights')
+				if mobileSize then $('button#NavigationToggle').trigger('click')
+			)
+			$('a[href="/Client-Successes.aspx"].CMSListMenuLink').on('click', (event) ->
+				event.preventDefault()
+				scrollToElement('#client-successes')
+				if mobileSize then $('button#NavigationToggle').trigger('click')
+			)
+			$('a[href="/Partners.aspx"].CMSListMenuLink').on('click', (event) ->
+				event.preventDefault()
+				scrollToElement('#partners')
+				if mobileSize then $('button#NavigationToggle').trigger('click')
+			)
+			$('a[href="/News.aspx"].CMSListMenuLink').on('click', (event) ->
+				event.preventDefault()
+				scrollToElement('#news-and-events')
+				if mobileSize then $('button#NavigationToggle').trigger('click')
+			)
+			$('a[href="/Events.aspx"].CMSListMenuLink').on('click', (event) ->
+				event.preventDefault()
+				scrollToElement('#news-and-events')
+				if mobileSize then $('button#NavigationToggle').trigger('click')
+			)
+			$('a[href="/Contact-Us.aspx"].CMSListMenuLink').on('click', (event) ->
+				event.preventDefault()
+				scrollToElement('#contact-us')
+				if mobileSize then $('button#NavigationToggle').trigger('click')
+			)
+
+	scrollToElement = (element, headerAdjust = true) ->
+		adjustment = 69
+		if mobileSize
+			adjustment = 56
+		else
+			if $(document).scrollTop() < $('.page-body').offset().top - 69 then adjustment += 69
+		if not headerAdjust then adjustment = 0
+		$('html,body').animate(
+			scrollTop: $(element).offset().top - adjustment
+		, 420)
+
+	cioitBindings = ->
+		if $('.story-title').length > 0
+			$('#ITTeaserArrow').on('click', ->
+				Versatile.switchCIOITState(currentSlide + 1)
+			)
+			$('#CIOTeaserArrow').on('click', ->
+				Versatile.switchCIOITState(currentSlide - 1)
+			)
+			$(window).scroll(->
+				if scrollTO then clearTimeout(scrollTO)
+				scrollTO = setTimeout(scrollComplete, 120)
+			)
+		$(window).resize(->
+			if resizeTO then clearTimeout(resizeTO)
+			resizeTO = setTimeout(resizeComplete, 120)
+		)
+		$('#cio-it-story').on('swipeleft', ->
+			if currentSlide < slidesArray.length
+				Versatile.switchCIOITState(currentSlide + 1)
+		)
+		$('#cio-it-story').on('swiperight', ->
+			if currentSlide > 0
+				Versatile.switchCIOITState(currentSlide - 1)
+		)
+
+	resizeComplete = ->
+		initSizeTracking(->
+			if $('.story-title').length > 0
+				initCIOITStory(->
+					initCIOITSlideshow(->
+						Versatile.switchCIOITState(currentSlide, true)
+					)
+				)
+			if tabletSize
+				$('header.main-page').removeAttr('style')
+				initMobileMenu()
+			else
+				deinitMobileMenu()
+		)
+
+	scrollComplete = ->
+		if not tabletSize
+			if $(document).scrollTop() > $('.page-body').offset().top - 69
+				$('header.main-page').css('position', 'fixed')
+			else
+				$('header.main-page').css('position', 'relative')
+
+	initMobileMenu = ->
+		#console.log('Initializing Mobile Menu.')
+		if tabletSize and not mobileMenuActive
+			if $('nav.main-site').length > 0
+				areaCounter = 0
+				$('nav.main-site > ul > li').each(->
+					nestedList = $(this).find('> ul')
+					if nestedList.length > 0
+						listToggleButton = $('<button id="NAVToggle-' + areaCounter + '" class="nav-section-toggle" data-area="' + areaCounter + '"></button>')
+						listToggleButton.append('<div class="nav-section-arrow">&nbsp;</div>')
+						listToggleButton.on('click', (event) ->
+							event.preventDefault()
+							clickedArea = $(this).data('area')
+							$(this).toggleClass('opened')
+							$('ul.nav-section-' + clickedArea).slideToggle(menuAnimSpeed)
+						)
+						nestedList.addClass('nav-section-' + areaCounter)
+						nestedOpen = false
+						if nestedList.find('.CMSListMenuLinkHighlighted').length > 0 then nestedOpen = true
+						$(this).append(listToggleButton)
+						if nestedOpen
+							$(this).find('button.nav-section-toggle').addClass('opened')
+						else
+							nestedList.hide()
+						areaCounter++
+				)
+				$('nav.main-site').hide()
+				$('button#NavigationToggle').removeClass('opened')
+				mobileMenuActive = true
+
+	deinitMobileMenu = ->
+		#console.log('Initializing Desktop Menu.')
+		if not tabletSize and mobileMenuActive
+			if $('nav.main-site').length > 0
+				$('nav.main-site').show()
+				$('nav.main-site > ul > li').each(->
+					$(this).find('button.nav-section-toggle').remove()
+					$(this).find('> ul').show()
+					$(this).find('> ul').removeAttr('style')
+				)
+				$('.opened').each(->
+					$(this).removeClass('opened')
+				)
+				mobileMenuActive = false
+
+	initCIOITStory = (callback) ->
+		storyPositions = {}
+		storyAreaWidth = $('.bound-panels-story').width()
+		for size in sizeTracking
+			for storyPosition, attributes of storyDefaults[size]
+				if not storyPositions[storyPosition]
+					storyPositions[storyPosition] = {}
+				for element, properties of attributes
+					if not storyPositions[storyPosition][element]
+						storyPositions[storyPosition][element] = {}
+					for property, adjustment of properties
+						value = 0
+						change = 0
+						if adjustment instanceof Array
+							value = adjustment[0]
+							change = adjustment[1]
+						else
+							value = adjustment
+						if property isnt 'opacity'
+							if value.indexOf('%') isnt -1
+								valueNumber = parseInt(value.substring(0, value.length - 1))
+								value = Math.round(storyAreaWidth * (valueNumber/100) + change)
+							else
+								value = parseInt(value.substring(0, value.length - 2))
+						else
+							value = adjustment
+						storyPositions[storyPosition][element][property] = value
+		callback()
+
+
+	initCIOITSlideshow = (callback) ->
+		if $('#CIOITSlidingArea').length > 0
+			slideMoveArray = []
+			slideArea = $('.bound-panels-slides')
+			slideAreaWidth = slideArea.width()
+			slideAreaHeight = slideArea.height()
+			slidingArea = $('#CIOITSlidingArea')
+			slidingArea.css(
+				height: slideAreaHeight + 'px'
+				width: (slideAreaWidth * slidesArray.length) + 'px'
+			)
+			slidingDots = $('#CIOITSlidingAreaDots')
+			slidingDots.css(
+				left: Math.round((slideAreaWidth/2) - ((slidesArray.length * 26)/2)) + 'px'
+			)
+			leftPosition = 0
+			for slide in slidesArray
+				slide.css(
+					left: leftPosition + 'px'
+					height: slideAreaHeight + 'px'
+					width: slideAreaWidth + 'px'
+				)
+				slideMoveArray.push(leftPosition)
+				leftPosition += slideAreaWidth
+		else
+			if $('.bound-panels-slides').length > 0
+				slideMoveArray = []
+				slideArea = $('.bound-panels-slides')
+				slideAreaWidth = slideArea.width()
+				slideAreaHeight = slideArea.height()
+				$('.bound-panels-slides .success-video-hero').each(->
+					slideDiv = $(this)
+					slidesArray.push(slideDiv)
+					$(this).remove()
+				)
+				slidingArea = $('<div id="CIOITSlidingArea"></div>')
+				slidingArea.css(
+					position: 'absolute'
+					display: 'block'
+					top: '0px'
+					left: '0px'
+					height: slideAreaHeight + 'px'
+					width: (slideAreaWidth * slidesArray.length) + 'px'
+				)
+				slidingDots = $('<div id="CIOITSlidingAreaDots"></div>')
+				slidingDots.css(
+					position: 'absolute'
+					display: 'block'
+					bottom: '32px'
+					left: Math.round((slideAreaWidth/2) - ((slidesArray.length * 36)/2)) + 'px'
+					zIndex: 100
+				)
+				dotButtonTemplate = $('<button class="slide-dot">&nbsp;</button>')
+				leftPosition = 0
+				slideCounter = 0
+				for slide in slidesArray
+					slide.css(
+						position: 'absolute'
+						display: 'inline-block'
+						top: '0px'
+						left: leftPosition + 'px'
+						height: slideAreaHeight + 'px'
+						width: slideAreaWidth + 'px'
+					)
+					slideMoveArray.push(leftPosition)
+					slide.show()
+					slidingArea.append(slide)
+					currentDot = dotButtonTemplate.clone()
+					currentDot.attr('id', 'CIOITSlideButton-' + slideCounter)
+					currentDot.data('slidenumber', slideCounter)
+					currentDot.on('click', (event) ->
+						event.preventDefault()
+						Versatile.switchCIOITState($(this).data('slidenumber'))
+					)
+					slidingDots.append(currentDot)
+					leftPosition += slideAreaWidth
+					slideCounter++
+				slideArea.append(slidingDots)
+				slideArea.append(slidingArea)
+				currentSlide = 0
+		callback()
+
+	initSuccessSlideshow = ->
+		slideArea = $('.success-slideshow')
+		if slideArea.length > 0
+			slideMoveArray = []
+			slideAreaWidth = slideArea.width()
+			slideAreaHeight = slideArea.height()
+			$('.success-slideshow .success-video-preview').each(->
+				slideDiv = $(this)
+				slidesArray.push(slideDiv)
+				$(this).remove()
+			)
+			slidingArea = $('<div id="SuccessSlidingArea"></div>')
+			slidingArea.css(
+				position: 'absolute'
+				display: 'block'
+				top: '0px'
+				left: '0px'
+				height: slideAreaHeight + 'px'
+				width: (slideAreaWidth * slidesArray.length) + 'px'
+			)
+			controlDiv = $('<div class="slide-controls clearfix"></div>')
+			slideTitles = $('<div class="slide-titles"></div>')
+			slideTitles.css(
+				position: 'relative'
+				display: 'inline-block'
+				float: 'left'
+			)
+			titleTextTemplate = $('<a href="#" class="slide-title"></a>')
+			slidingDots = $('<div class="slide-dots"></div>')
+			slidingDots.css(
+				position: 'relative'
+				display: 'inline-block'
+				float: 'right'
+			)
+			dotButtonTemplate = $('<button class="slide-dot">&nbsp;</button>')
+			leftPosition = 0
+			slideCounter = 0
+			for slide in slidesArray
+				slide.css(
+					position: 'absolute'
+					display: 'inline-block'
+					top: '0px'
+					left: leftPosition + 'px'
+					height: slideAreaHeight + 'px'
+					width: slideAreaWidth + 'px'
+				)
+				slideMoveArray.push(leftPosition)
+				slide.show()
+				slidingArea.append(slide)
+				currentTitle = titleTextTemplate.clone()
+				currentTitle.attr('id', 'SuccessSlideTitle-' + slideCounter)
+				currentTitle.data('target', slideCounter)
+				currentTitle.html(slide.data('title'))
+				currentTitle.on('click', (event) ->
+					event.preventDefault()
+					Versatile.switchSlide($(this).data('target'))
+				)
+				currentDot = dotButtonTemplate.clone()
+				currentDot.attr('id', 'SuccessSlideButton-' + slideCounter)
+				currentDot.data('target', slideCounter)
+				currentDot.on('click', (event) ->
+					event.preventDefault()
+					Versatile.switchSlide($(this).data('target'))
+				)
+				slideTitles.append(currentTitle)
+				slidingDots.append(currentDot)
+				leftPosition += slideAreaWidth
+				slideCounter++
+			controlDiv.append(slideTitles)
+			controlDiv.append(slidingDots)
+			slideArea.append(slidingArea)
+			slideArea.after(controlDiv)
+			currentSlide = 1
+			Versatile.switchSlide(currentSlide)
+
+	resizeSuccess = ->
+		slideArea = $('#SuccessSlidingArea')
+		aspectRatio = .6328125
+		newSlideAvailWidth = $('.success-slideshow').width()
+		newSlideAvailHeight = newSlideAvailWidth * aspectRatio
+		newCollectiveWidth = 0
+		slideCounter = 0
+
+		$('#SuccessSlidingArea .success-video-preview').each(->
+			$(this).css(
+				width: newSlideAvailWidth + 'px'
+				height: newSlideAvailHeight + 'px'
+				left: newCollectiveWidth + 'px'
+			)
+
+			slideMoveArray[slideCounter] = newCollectiveWidth
+			newCollectiveWidth += newSlideAvailWidth
+			slideCounter++
+		)
+
+		if slideArea.attr('data-current')
+			slideAreaPosition = slideArea.attr('data-current') * newSlideAvailWidth
+		else
+			slideAreaPosition = 0
+		slideArea.css(
+			width: newCollectiveWidth + 'px'
+			height: newSlideAvailHeight + 'px'
+			left: '-' + slideAreaPosition + 'px'
+		)
+
+		$('.success-slideshow').height(newSlideAvailHeight + 'px')
+
+
+	iePlaceholderFix = ->
+		$('input, textarea').each(->
+			inputValue = $(this).val()
+			placeHolder = $(this).attr('placeholder')
+			if placeHolder and inputValue is ''
+				$(this).val(placeHolder)
+				$(this).on('focus', ->
+					if $(this).val() is $(this).attr('placeholder')
+						$(this).val('')
+				)
+				$(this).on('blur', ->
+					if $(this).val() is ''
+						$(this).val($(this).attr('placeholder'))
+				)
+		)
+
+	@switchSlide: (target) ->
+		#console.log('Switching Slide to: ' + target)
+		if target < slideMoveArray.length
+			$('#SuccessSlidingArea').animate(
+				left: - slideMoveArray[target] + 'px'
+			, slideAnimSpeed)
+			$('#SuccessSlidingArea').attr('data-current',target)
+
+			$('.slide-controls button.slide-dot').removeClass('active')
+			$('.slide-controls a.slide-title').removeClass('active')
+			$('.slide-controls button#SuccessSlideButton-' + target + '.slide-dot').addClass('active')
+			$('.slide-controls a#SuccessSlideTitle-' + target + '.slide-title').addClass('active')
+			currentSlide = target
+		else
+			#console.log('Invalid Target for Success Slide: ' + target + '.')
+
+	@switchCIOITState: (target, forceSwitch) ->
+		#console.log('Switching to target: ' + target)
+		if forceSwitch or (target isnt storyStatus and target isnt currentSlide)
+			playControlLeftPos = 0
+			switch target
+				when 1 then target = 'cioit'
+				when 0 then target = 'cio'
+				when 2 then target = 'it'
+				else target = target
+			if target is 'cioit'
+				if storyPositions[target].CIOITRibbon
+					playControlLeftPos = storyPositions[target].CIOITRibbon.width + storyPositions[target].CIOITRibbon.left - 30
+				Versatile.switchCIOITStory('cioit')
+				Versatile.switchCIOITSlide(1)
+				$('.bound-panels-story .story-title').fadeIn(storyAnimSpeed)
+				$('.bound-panels-story .story-graphic').fadeOut(storyAnimSpeed/2).addClass('cioit').removeClass('cio','it').fadeIn(storyAnimSpeed/2)
+				$('.bound-panels-story .leading-triangle').fadeIn(storyAnimSpeed)
+				$('.bound-panels-story .leading-hanging-triangle').fadeOut(storyAnimSpeed)
+				if not mobileSize
+					$('#ITTeaserText').animate({opacity: 1},storyAnimSpeed/2)
+					$('#CIOTeaserText').animate({opacity: 1},storyAnimSpeed/2)
+					$('.bound-panels-story .ribbon-story').css('textAlign', 'right')
+					$('.bound-panels-story .background-ribbon').fadeIn(storyAnimSpeed)
+			else if target is 'cio'
+				if storyPositions[target].CIOITRibbon
+					playControlLeftPos = storyPositions[target].CIOITRibbon.width - 30
+				Versatile.switchCIOITStory('cio')
+				Versatile.switchCIOITSlide(0)
+				$('.bound-panels-story .story-title').fadeOut(storyAnimSpeed)
+				$('.bound-panels-story .story-graphic').fadeOut(storyAnimSpeed/2).addClass('cio').removeClass('it','cioit').fadeIn(storyAnimSpeed/2)
+				$('.bound-panels-story .leading-triangle').fadeIn(storyAnimSpeed)
+				$('.bound-panels-story .leading-hanging-triangle').fadeOut(storyAnimSpeed)
+				if not mobileSize
+					$('#ITTeaserText').animate({opacity: 0},storyAnimSpeed/2)
+					$('.bound-panels-story .ribbon-story').css('textAlign', 'right')
+					$('.bound-panels-story .background-ribbon').fadeOut(storyAnimSpeed)
+			else if target is 'it'
+				if storyPositions[target].CIOITRibbon
+					playControlLeftPos = storyPositions[target].CIOITRibbon.width - 30
+				Versatile.switchCIOITStory('it')
+				Versatile.switchCIOITSlide(2)
+				$('.bound-panels-story .story-title').fadeOut(storyAnimSpeed)
+				$('.bound-panels-story .story-graphic').fadeOut(storyAnimSpeed/2).addClass('it').removeClass('cioit','cio').fadeIn(storyAnimSpeed/2)
+				$('.bound-panels-story .leading-triangle').fadeOut(storyAnimSpeed)
+				$('.bound-panels-story .leading-hanging-triangle').fadeIn(storyAnimSpeed)
+				if not mobileSize
+					$('#CIOTeaserText').animate({opacity: 0},storyAnimSpeed/2)
+
+					if storyPositions[target].CIOITRibbon
+						playControlLeftPos = storyPositions[target].CIOITRibbon.left - 40
+					$('.bound-panels-story .ribbon-story').css('textAlign', 'left')
+					$('.bound-panels-story .background-ribbon').fadeOut(storyAnimSpeed)
+			else
+				#console.log('Invalid Target for CIO-IT Switch: ' + target + '.')
+			if mobileSize
+				$('.bound-panels-story .background-ribbon').hide()
+				$('.bound-panels-slides .video-play-control').each(->
+					$(this).removeAttr('style')
+				)
+			else
+				$('#CIOITSlidingAreaDots').css('left', playControlLeftPos)
+				$('.bound-panels-slides .video-play-control').each(->
+					$(this).css('left', playControlLeftPos)
+				)
+		else
+			#console.log('Already in state: ' + target)
+
+	@switchCIOITStory: (target) ->
+		#console.log('Switching Story to: ' + target)
+		if storyPositions.hasOwnProperty(target)
+			for element, positions of storyPositions[target]
+				$('#' + element).animate(
+					positions
+				, storyAnimSpeed)
+			storyStatus = target
+		else
+			#console.log('Invalid Target for CIO-IT Story: ' + target + '.')
+
+	@switchCIOITSlide: (target) ->
+		#console.log('Switching Slide to: ' + target)
+		if target < slideMoveArray.length
+			$('#CIOITSlidingArea').animate(
+				left: - slideMoveArray[target] + 'px'
+			, slideAnimSpeed)
+			$('.bound-panels-slides button.slide-dot').removeClass('active')
+			$('.bound-panels-slides button#CIOITSlideButton-' + target + '.slide-dot').addClass('active')
+			currentSlide = target
+		else
+			#console.log('Invalid Target for CIO-IT Slide: ' + target + '.')
+
+	initYouTubeVideos = ->
+		tag = document.createElement("script")
+		tag.src = "https://www.youtube.com/iframe_api"
+		firstScriptTag = document.getElementsByTagName("script")[0]
+		firstScriptTag.parentNode.insertBefore tag, firstScriptTag
+
+		initVideoModal()
+		initModals()
+
+	youtubeVideos = []
+
+	@initPlayer = ->
+		# create youtube player
+		$('.youtube-video').each(->
+			videoID = $('this').attr('data-videoID')
+			iframeID = $(this).attr('id')
+			video = new YT.Player(iframeID, {
+				events:{
+					'onStateChange': onVideoCompletion
+				}
+			})
+			youtubeVideos[iframeID]=(video)
+		)
+
+	initVideoModal = ->
+		$(document).on('click','#video-modal .close', (e)->
+			e.preventDefault()
+			activeIframeID = $('#video-modal iframe.active').attr('id')
+
+			$('#video-modal').removeClass('active')
+			$('#video-modal iframe').removeClass('active')
+			$('#video-modal .video-wrapper').removeClass('hidden')
+			$('#video-modal .form-wrapper').removeClass('active')
+			if youtubeVideos[activeIframeID] and "ontouchstart" of document.documentElement is false
+				#console.log(youtubeVideos[activeIframeID])
+				youtubeVideos[activeIframeID].stopVideo()
+		)
+		$(document).on('click','.youtube-video-control', (e)->
+			e.preventDefault()
+			iframeID = '#' + $(this).attr('data-iframeID')
+			playerID = $(this).attr('data-iframeID')
+
+			if $('#video-modal').hasClass('active')
+				$(iframeID).removeClass('active')
+				$('#video-modal').removeClass('active')
+				if "ontouchstart" of document.documentElement == false
+					youtubeVideos[playerID].stopVideo()
+			else
+				#console.log("ontouchstart" of document.documentElement)
+				$(iframeID).addClass('active')
+				$('#video-modal').addClass('active')
+				if "ontouchstart" of document.documentElement == false
+					if typeof youtubeVideos[playerID] isnt 'undefined' and typeof youtubeVideos[playerID].playVideo isnt 'undefined'
+						youtubeVideos[playerID].playVideo()
+		)
+	onVideoCompletion = (event) ->
+		#console.log(event)
+		if event.data is 0
+			cueForm()
+
+	cueForm = ->
+		$('#video-modal iframe').removeClass('active')
+		$('#video-modal .form-wrapper').addClass('active')
+		$('#video-modal .video-wrapper').addClass('hidden')
+
+	initModals = ->
+		$(document).on('click','*[data-toggle="modal"]', (e)->
+			e.preventDefault()
+
+			if $(this).attr('data-target').length > 0
+				$modal = $($(this).attr('data-target'))
+
+			else if $(this).attr('href').length > 0
+				$modal = $($(this).attr('data-target'))
+			else
+				$modal = $(this).parents('.modal')
+
+			if $modal.hasClass('active')
+				$modal.removeClass('active')
+			else
+				$('.modal').removeClass('active')
+				$modal.addClass('active')
+		)
+Versatile()
