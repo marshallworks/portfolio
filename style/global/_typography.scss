@@ -19,7 +19,6 @@ h2 {
 }
 
 p {
-	text-indent: 1em;
 	margin: 12px 0;
 }
 
@@ -27,6 +26,9 @@ a {
 	font-weight: 400;
 	color: $dark-blue;
 	text-decoration: none;
+	&:hover {
+		color: $orange;
+	}
 }
 
 strong {

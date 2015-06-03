@@ -6,4 +6,19 @@ section.summary {
 		float: right;
 		margin: 0 0 16px 32px;
 	}
+	a.path-project-link {
+		display: inline-block;
+		text-align: center;
+		margin: 10px 10px 10px 0;
+		float: left;
+		img {
+			display: inline-block;
+			width: 160px;
+			height: 160px;
+			border: 2px solid $white;
+			&:hover {
+				border-color: $orange;
+			}
+		}
+	}
 }
