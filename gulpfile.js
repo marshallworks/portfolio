@@ -25,6 +25,11 @@ gulp.task('reset', ['clean-local'], function () {
 	return true;
 });
 
+gulp.task('prod', ['clean-prod'], function () {
+	return gulp.src('./.local/**/*')
+		.pipe(gulp.dest('./prod'));
+});
+
 // Local Tasks
 
 gulp.task('local-views', function () {
@@ -78,6 +83,10 @@ gulp.task('local-script', function () {
 
 gulp.task('clean-local', function (cb) {
 	del(['./.local'], cb);
+});
+
+gulp.task('clean-prod', function (cb) {
+	del(['./prod'], cb);
 });
 
 var resetLocal = function () {

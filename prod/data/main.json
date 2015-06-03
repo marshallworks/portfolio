@@ -1,0 +1,362 @@
+{
+	"projects": [
+		{
+			"client": "Bank of America",
+			"logo": "boa.png",
+			"link": "",
+			"actual": false,
+			"screens": ["boa1.jpg", "boa2.jpg"],
+			"code": ["boa.coffee"],
+			"year": 2013,
+			"duration": 0,
+			"contribution": "<p>Primary maintainer of Bank of America mobile application and online banking simulators. These simulators echo the look and functionality of the production applications and website, while only containing sample data.</p><p>Created custom framework to support the simulators from scratch in 2014, which drastically cut development time when adding new features and experience flows.</p>"
+		},{
+			"client": "Tasktop",
+			"logo": "tasktop.png",
+			"link": "https://www.tasktop.com/resources",
+			"actual": true,
+			"screens": ["tasktop1.jpg", "tasktop2.jpg"],
+			"code": [],
+			"year": 2015,
+			"duration": 2,
+			"contribution": ""
+		},{
+			"client": "HealthSource RI",
+			"logo": "hsri.png",
+			"link": "http://www.healthsourceri.com/",
+			"actual": true,
+			"screens": ["hsri1.jpg", "hsri2.jpg"],
+			"code": [],
+			"year": 2014,
+			"duration": 4,
+			"contribution": ""
+		},{
+			"client": "D'Angelo",
+			"logo": "dangelo.png",
+			"link": "http://www.dangelos.com/",
+			"actual": true,
+			"screens": ["dangelo1.jpg", "dangelo2.jpg"],
+			"code": [],
+			"year": 2014,
+			"duration": 3,
+			"contribution": ""
+		},{
+			"client": "Whoop",
+			"logo": "whoop.png",
+			"link": "http://whoop.com",
+			"actual": false,
+			"screens": ["whoop1.jpg", "whoop2.jpg"],
+			"code": [],
+			"year": 2014,
+			"duration": 1,
+			"contribution": ""
+		},{
+			"client": "MonarqRC RDS",
+			"logo": "rds.png",
+			"link": "https://www.monarqrc.com/about-rds",
+			"actual": false,
+			"screens": [],
+			"code": [],
+			"year": 2014,
+			"duration": 4,
+			"contribution": ""
+		},{
+			"client": "Isles of Shoals",
+			"logo": "iossc.png",
+			"link": "https://islesofshoals.com/",
+			"actual": true,
+			"screens": ["iossc1.jpg", "iossc2.jpg"],
+			"code": [],
+			"year": 2014,
+			"duration": 6,
+			"contribution": ""
+		},{
+			"client": "John Hancock Online Enrollment Experience",
+			"logo": "jhoee.png",
+			"link": "https://www.jhgoenroll.com/",
+			"actual": true,
+			"screens": ["jhoee.jpg"],
+			"code": [],
+			"year": 2014,
+			"duration": 2,
+			"contribution": ""
+		},{
+			"client": "Versatile",
+			"logo": "versatile.png",
+			"link": "http://weareversatile.com/",
+			"actual": true,
+			"screens": ["versatile.jpg"],
+			"code": [],
+			"year": 2014,
+			"duration": 4,
+			"contribution": ""
+		},{
+			"client": "Koko Fitclub",
+			"logo": "koko.png",
+			"link": "http://kokofitclub.com/",
+			"actual": false,
+			"screens": ["koko1.jpg", "koko2.jpg"],
+			"code": [],
+			"year": 2013,
+			"duration": 4,
+			"contribution": ""
+		},{
+			"client": "Bertucci's",
+			"logo": "bertuccis.png",
+			"link": "http://www.bertuccis.com/",
+			"actual": true,
+			"screens": ["bertuccis.jpg"],
+			"code": [],
+			"year": 2013,
+			"duration": 4,
+			"contribution": ""
+		},{
+			"client": "TrackMyTrainer",
+			"logo": "trackmytrainer.png",
+			"link": "http://trackmytrainer.com/",
+			"actual": false,
+			"screens": ["tmt.jpg"],
+			"code": [],
+			"year": 2013,
+			"duration": 4,
+			"contribution": ""
+		}
+	],
+	"code": [
+		{
+			"name": "Bertucci's Locations",
+			"file": "bertuccis.txt",
+			"lang": "coffee",
+			"description": "Part of the logic on the Bertucci's website that allows a guest to find and select a favorite a location which the browser remembers on subsequent visits. This also makes the relevant information about that location easy to access from anywhere on the site."
+		},{
+			"name": "BoA Controller",
+			"file": "boa.txt",
+			"lang": "coffee",
+			"description": "The goal was to make it very easy to create complex behaviors from simple behaviors. This controller makes it possible to chain small actions into a callback driven sequence based on the need of the screen."
+		},{
+			"name": "Dangelo's Template",
+			"file": "dangelo.txt",
+			"lang": "html",
+			"description": "Template for the Dangelo's UX Prototype, which utilizes Nunjucks for the templating engine."
+		},{
+			"name": "Dangelo's Style",
+			"file": "dangelo_style.txt",
+			"lang": "scss",
+			"description": "Styles used during the creation of the Dangelo's UX Prototype. Uses flexbox to control the layout."
+		},{
+			"name": "Path Movement Renderer",
+			"file": "dots.txt",
+			"lang": "javascript",
+			"description": "Part of the path dots code challenge, this is the render that creates the board. The dots are placed using the canvas, while the paths are built up as SVGs."
+		},{
+			"name": "Path Movement Board",
+			"file": "dots2.txt",
+			"lang": "javascript",
+			"description": "This section creates the board, and sets random directions for every dot on the board. That board can then be navigated by pieces."
+		},{
+			"name": "HealthSource RI Scroll",
+			"file": "hsri.txt",
+			"lang": "coffee",
+			"description": "On the primary content pages, this controls the scroll progress indicator on the right side of the page. It acts as a secondary navigation, and visually communicates where the read is."
+		},{
+			"name": "HealthSoure RI Style",
+			"file": "hsri_style.txt",
+			"lang": "scss",
+			"description": "On the same page that has the scroll behavior, this is part of the styles that control a highly nested page. Many styles are different, depending on how deeply they are nested."
+		},{
+			"name": "IOSSC Calendar",
+			"file": "iossc.txt",
+			"lang": "coffee",
+			"description": "General calendar functionality used for a number of projects, but first created for the scheduling calendar on the Isles of Shoals website."
+		},{
+			"name": "Koko Paths",
+			"file": "koko.txt",
+			"lang": "coffee",
+			"description": "The client wanted to feature a story on their main page that connected the story items by dots. This path had to be editable within the Content Management System and work responsively. When the main page loads, the code scans the elements for where in the element the path should go, then creates a path with random variations to connect the points using Bezier curves."
+		},{
+			"name": "Koko Style",
+			"file": "koko_style.txt",
+			"lang": "scss",
+			"description": "Part of the same section as the path generator, these styles allow significant customization of a story using the Content Management System."
+		},{
+			"name": "List Operations",
+			"file": "listops.txt",
+			"lang": "haskell",
+			"description": "<a href=\"http://exercism.io/\">Exercism</a> problem solution for basic list manipulation functions."
+		},{
+			"name": "Content Nav Model",
+			"file": "marshallworks.txt",
+			"lang": "ruby",
+			"description": "Model for content navigation data used on a previous version of this site."
+		},{
+			"name": "People Controller",
+			"file": "squire_go.txt",
+			"lang": "go",
+			"description": "Personal project controller written in Go and using MonogDB."
+		},{
+			"name": "Accounts Controller",
+			"file": "squire_python.txt",
+			"lang": "python",
+			"description": "Personal project controller written in Python and using PostgreSQL."
+		},{
+			"name": "General Functionality",
+			"file": "symmetry.txt",
+			"lang": "javascript",
+			"description": "Various page functionality for a client website, written in VanillaJS."
+		},{
+			"name": "Tasktop Resource Filtering",
+			"file": "tasktop.txt",
+			"lang": "typescript",
+			"description": "The client had a large number of resources, which had been difficult for people to sift through, and find what they were looking for. During the development of their new site, I created a filtering and search feature that enabled them to filter by: Product, Resource Type, Topic, and even text search. The server provides a rendered JSON file, and the rest is handled in browser."
+		},{
+			"name": "Versatile Animation",
+			"file": "versatile.txt",
+			"lang": "coffee",
+			"description": "The designer for Versatile had a concept for the hero section of the site. It involved movement of multiple layers and had to work differently depending on screen size."
+		},{
+			"name": "Versatile Animation Styles",
+			"file": "versatile_style.txt",
+			"lang": "scss",
+			"description": "The styles that work in conjunction with the JavaScript animation to create the hero experience."
+		},{
+			"name": "Whoop 360 Animation",
+			"file": "whoop.txt",
+			"lang": "coffee",
+			"description": "Un-released complex page animation that included a rendering of a bracelet that rotated in full 360 degrees, and would rotate to specific positions based on the scroll position and content slide."
+		}
+	],
+	"images": [
+		{
+			"title": "",
+			"description": "",
+			"file": "090801CreatureWreck.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "BananaMonster.jpg"
+		},{
+			"title": "Boiler Room",
+			"description": "Boiler room inside a steam-punk ship. Created using 3ds Max, Zbrush, and Photoshop.",
+			"file": "Boiler_Gray.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "Boiler_View1.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "Boiler_View3.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "F16_Danger_Areas.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "FighterCharacters.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "FighterDesign.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "HeadSculp.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "Jolly_Humor.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "MMTromp.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "Minotaur_Tech.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "Minotaur_Tech_Model.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "MonsterCol.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "NewBoss.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "Newman.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "P-51.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "RedHand.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "SloberMonster.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "Still.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "TheEvent.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "UhntDesignSketch.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "UhntFullModel.jpg"
+		},{
+			"title": "",
+			"description": "",
+			"file": "UhntGameModel.jpg"
+		}
+	],
+	"skills": [
+		{
+			"title": "HTML5",
+			"level": 5,
+			"tags": ["frontend"]
+		},{
+			"title": "CSS3",
+			"level": 5,
+			"tags": ["frontend"]
+		},{
+			"title": "JavaScript",
+			"level": 5,
+			"tags": ["frontend"]
+		},{
+			"title": "Python",
+			"level": 3,
+			"tags": ["backend"]
+		},{
+			"title": "Go",
+			"level": 1,
+			"tags": ["backend"]
+		},{
+			"title": "Sass",
+			"level": 5,
+			"tags": ["frontend", "style"]
+		},{
+			"title": "Haskell",
+			"level": 2,
+			"tags": ["backend", "functional"]
+		},{
+			"title": "MongoDB",
+			"level": 2,
+			"tags": ["backend", "database", "nosql"]
+		}
+	]
+}
