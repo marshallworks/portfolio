@@ -6,6 +6,7 @@ header.main {
 	background: url(/assets/imgs/MW_Header_Background.png);
 	background-repeat: repeat-x;
 	background-size: 92px 68px;
+	z-index: 10;
 	.logo {
 		display: block;
 		position: absolute;
@@ -87,6 +88,22 @@ header.main {
 				-webkit-transform: rotate(-45deg);
 				transform: rotate(-45deg);
 			}
+		}
+	}
+	&.desktop {
+		nav.site {
+			top: 20px;
+			left: 164px;
+			background: transparent;
+			li {
+				display: inline-block;
+				a {
+					color: $white;
+				}
+			}
+		}
+		.nav-toggle {
+			display: none;
 		}
 	}
 }

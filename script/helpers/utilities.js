@@ -5,8 +5,9 @@ define(['_'], function (_) {
 	var framesPerSecond = 1000 / 60;
 	_.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 
-	var qs, qsa, on, off,
+	var init, qs, qsa, on, off, distributor, dist,
 		getJSON, getFile, buildHTML, getWidth, getHeight,
+		windowResize, windowScroll,
 		animate, fadeIn, fadeOut, runFade, easeInOutCubic;
 
 	qs = function (selector, scope) {
@@ -23,6 +24,30 @@ define(['_'], function (_) {
 
 	off = function (target, type, callback, useCapture) {
 		target.removeEventListener(type, callback, !!useCapture);
+	};
+
+	distributor = function () {
+		var listeners = {};
+		var register = function (key, cb, scope) {
+			if (!listeners.hasOwnProperty(key)) {
+				listeners[key] = [];
+			}
+			listeners[key].push({
+				cb: cb,
+				scope: scope
+			});
+		};
+		var fire = function (key, data) {
+			if (listeners.hasOwnProperty(key)) {
+				listeners[key].forEach(function(func) {
+					func.cb(data, func.scope);
+				});
+			}
+		};
+		return Object.freeze({
+			register: register,
+			fire: fire
+		});
 	};
 
 	getJSON = function(url, cb, scope) {
@@ -89,18 +114,67 @@ define(['_'], function (_) {
 		return height;
 	}
 
+	windowResize = function () {
+		var resizeTimeOut = null;
+		on(window, 'resize', function () {
+			if (resizeTimeOut !== null) {
+				clearTimeout(resizeTimeOut);
+				resizeTimeOut = null;
+			}
+			resizeTimeOut = setTimeout(function () {
+				dist.fire('resize', {
+					width: window.innerWidth,
+					height: window.innerHeight
+				});
+			}, 400);
+		});
+	};
+
+	windowScroll = function () {
+		var body = qs('body');
+		var posTop = body.scrollTop;
+		var posBottom = body.scrollTop + window.innerHeight;
+		var scrollTimeOut = null;
+		on(body, 'mousewheel', function () {
+			if (scrollTimeOut !== null) {
+				clearTimeout(scrollTimeOut);
+				scrollTimeOut = null;
+			}
+			scrollTimeOut = setTimeout(function () {
+				var scrollDown = posTop <= body.scrollTop ? true : false;
+				posTop = body.scrollTop;
+				posBottom = body.scrollTop + window.innerHeight;
+				dist.fire('scroll', {
+					pos: {
+						top: posTop,
+						bottom: posBottom
+					},
+					down: scrollDown
+				});
+			}, 200);
+		});
+	};
+
 	animate = function (element, value, unit, start, stop, frames, cb, scope) {
 		var currentPos = start;
 		var currentFrame = 0;
 		var change = stop - start;
 		var tick = window.setInterval(function () {
 			if (currentFrame < frames) {
-				element.style[value] = currentPos + unit;
+				if (value.indexOf('scroll') !== - 1) {
+					element[value] = currentPos;
+				} else {
+					element.style[value] = currentPos + unit;
+				}
 				currentPos = easeInOutCubic(currentFrame, start, change, frames);
 				currentFrame += 1;
 			}
 			else {
-				element.style[value] = stop + unit;
+				if (value.indexOf('scroll') !== - 1) {
+					element[value] = stop;
+				} else {
+					element.style[value] = stop + unit;
+				}
 				clearInterval(tick);
 				if (cb) {
 					cb(scope);
@@ -143,11 +217,21 @@ define(['_'], function (_) {
 		return c/2*((t-=2)*t*t + 2) + b;
 	};
 
+	init = function () {
+		dist = distributor();
+		windowScroll();
+		windowResize();
+	};
+
+	init();
+
 	return Object.freeze({
+		init: init,
 		qs: qs,
 		qsa: qsa,
 		on: on,
 		off: off,
+		dist: dist,
 		getJSON: getJSON,
 		getFile: getFile,
 		buildHTML: buildHTML,
