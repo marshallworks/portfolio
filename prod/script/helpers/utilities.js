@@ -7,7 +7,7 @@ define(['_'], function (_) {
 
 	var init, qs, qsa, on, off, distributor, dist,
 		getJSON, getFile, buildHTML, getWidth, getHeight,
-		windowResize, windowScroll,
+		windowResize, windowScroll, getScrollingPosition,
 		animate, fadeIn, fadeOut, runFade, easeInOutCubic;
 
 	qs = function (selector, scope) {
@@ -131,9 +131,8 @@ define(['_'], function (_) {
 	};
 
 	windowScroll = function () {
-		var body = qs('body');
-		var posTop = body.scrollTop;
-		var posBottom = body.scrollTop + window.innerHeight;
+		var posTop = getScrollingPosition()[1];
+		var posBottom = posTop + window.innerHeight;
 		var scrollTimeOut = null;
 		on(window, 'scroll', function () {
 			if (scrollTimeOut !== null) {
@@ -141,9 +140,10 @@ define(['_'], function (_) {
 				scrollTimeOut = null;
 			}
 			scrollTimeOut = setTimeout(function () {
-				var scrollDown = posTop <= body.scrollTop ? true : false;
-				posTop = body.scrollTop;
-				posBottom = body.scrollTop + window.innerHeight;
+				var curPosTop = getScrollingPosition()[1];
+				var scrollDown = posTop <= curPosTop ? true : false;
+				posTop = curPosTop;
+				posBottom = curPosTop + window.innerHeight;
 				dist.fire('scroll', {
 					pos: {
 						top: posTop,
@@ -154,6 +154,19 @@ define(['_'], function (_) {
 			}, 200);
 		});
 	};
+
+	getScrollingPosition = function () {
+		var position = [0, 0];
+		if (typeof window.pageYOffset != 'undefined') {
+			position = [window.pageXOffset, window.pageYOffset];
+		} else if (typeof document.documentElement.scrollTop != 'undefined' &&
+						document.documentElement.scrollTop > 0) {
+			position = [document.documentElement.scrollLeft, document.documentElement.scrollTop];
+		} else if (typeof document.body.scrollTop != 'undefined') {
+			position = [document.body.scrollLeft, document.body.scrollTop];
+		}
+		return position;
+	}
 
 	animate = function (element, value, unit, start, stop, frames, cb, scope) {
 		var currentPos = start;
