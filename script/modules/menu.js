@@ -21,6 +21,9 @@ define(['_', 'UT'],function (_, UT) {
 			var scrollTo = function (event) {
 				event.preventDefault();
 				UT.animate(body, 'scrollTop', 'px', body.scrollTop, UT.qs(target).offsetTop - 68, 32);
+				if (data.width <= 660) {
+					close();
+				}
 			};
 
 			UT.on(element, 'click', scrollTo);
