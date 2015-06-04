@@ -135,7 +135,7 @@ define(['_'], function (_) {
 		var posTop = body.scrollTop;
 		var posBottom = body.scrollTop + window.innerHeight;
 		var scrollTimeOut = null;
-		on(body, 'mousewheel', function () {
+		on(window, 'scroll', function () {
 			if (scrollTimeOut !== null) {
 				clearTimeout(scrollTimeOut);
 				scrollTimeOut = null;

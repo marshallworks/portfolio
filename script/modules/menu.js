@@ -26,15 +26,24 @@ define(['_', 'UT'],function (_, UT) {
 			UT.on(element, 'click', scrollTo);
 		};
 
+		var open = function () {
+			button.classList.add('active');
+			UT.animate(nav, 'height', 'px', 0, openHeight, 28);
+			nav.classList.add('active');
+		};
+
+		var close = function () {
+			button.classList.remove('active');
+			UT.animate(nav, 'height', 'px', openHeight, 0, 28, function() {
+				nav.classList.remove('active');
+			});
+		};
+
 		var toggle = function () {
-			button.classList.toggle('active');
 			if (nav.style.height === '0px') {
-				UT.animate(nav, 'height', 'px', 0, openHeight, 28);
-				nav.classList.add('active');
+				open();
 			} else {
-				UT.animate(nav, 'height', 'px', openHeight, 0, 28, function() {
-					nav.classList.remove('active');
-				});
+				close();
 			}
 		};
 
@@ -71,9 +80,11 @@ define(['_', 'UT'],function (_, UT) {
 			if (data.width > 660) {
 				nav.style.height = '';
 				container.classList.add('desktop');
+				nav.classList.remove('active');
 			} else {
 				nav.style.height = '0px';
 				container.classList.remove('desktop');
+				button.classList.remove('active');
 			}
 		};
 
