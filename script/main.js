@@ -31,17 +31,22 @@ async function initWebGPU() {
   });
   const vertices = new Float32Array([
     -1, 1, 0, 1,
-    1, 0, 0, 1,
+    0, 0,
+
     -1, -1, 0, 1,
-    0, 1, 0, 1,
+    0, 1,
+
     1, 1, 0, 1,
-    0, 0, 1, 1,
+    1, 0,
+
     1, 1, 0, 1,
-    0, 0, 1, 1,
+    1, 0,
+
     -1, -1, 0, 1,
-    0, 1, 0, 1,
+    0, 1,
+
     1, -1, 0, 1,
-    1, 0, 0, 1
+    1, 1,
   ]);
   const vertexBuffer = device.createBuffer({
     size: vertices.byteLength,
@@ -52,12 +57,22 @@ async function initWebGPU() {
     {
       attributes: [
         { shaderLocation: 0, offset: 0, format: 'float32x4' },
-        { shaderLocation: 1, offset: 16, format: 'float32x4' },
+        { shaderLocation: 1, offset: 16, format: 'float32x2' },
       ],
-      arrayStride: 32,
+      arrayStride: 24,
       stepMode: 'vertex'
     }
   ];
+  const uniformBufferSize =
+    4 * 4 + // light direction
+    4 * 4;  // light color
+  const uniformBuffer = device.createBuffer({
+    size: uniformBufferSize,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+  });
+  const uniformValues = new Float32Array(uniformBufferSize / 4);
+  uniformValues.set([0, 0, -1, 1], 0);
+  uniformValues.set([1.0, 1.0, 1.0, 1.0], 4);
   const pipelineDescriptor = {
     vertex: {
       module: shaderModule,
@@ -73,15 +88,20 @@ async function initWebGPU() {
     layout: 'auto'
   };
   const renderPipeline = device.createRenderPipeline(pipelineDescriptor);
+  const bindGroup = device.createBindGroup({
+    layout: renderPipeline.getBindGroupLayout(0),
+    entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
+  });
+  device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
   const commandEncoder = device.createCommandEncoder();
-  const clearColor = { r: 0.0, g: 0.5, b: 1.0, a: 1.0 };
+  const clearColor = { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
 
   const renderPassDescriptor = {
     colorAttachments: [
       {
         clearValue: clearColor,
-        loadOp: "clear",
-        storeOp: "store",
+        loadOp: 'clear',
+        storeOp: 'store',
         view: CTX.getCurrentTexture().createView(),
       },
     ],
@@ -89,6 +109,7 @@ async function initWebGPU() {
 
   const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
   passEncoder.setPipeline(renderPipeline);
+  passEncoder.setBindGroup(0, bindGroup);
   passEncoder.setVertexBuffer(0, vertexBuffer);
   passEncoder.draw(6);
   passEncoder.end();
