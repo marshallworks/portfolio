@@ -115,8 +115,6 @@ async function initWebGPU() {
   passEncoder.end();
 
   device.queue.submit([commandEncoder.finish()]);
-
-  console.log(shaderModule);
 }
 
 initWebGPU();

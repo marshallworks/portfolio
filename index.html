@@ -32,11 +32,28 @@ fn vertex_main(@location(0) position: vec4f,
   return output;
 }
 
+fn circleNrm(center: vec2f, radius: f32, uv: vec2f) -> vec4f {
+  var center_3d = vec4f(center.x, center.y, 0.0, 1.0);
+  var uv_3d = vec4f(uv.x, uv.y, -.1, 1.0);
+  var result = normalize(uv_3d - center_3d);
+  var len = length(uv - center);
+  var s = smoothstep(len, radius + 0.01, radius - 0.01);
+  return mix(result, vec4f(0, 0, 1, 1), 1.0 - s);
+}
+
+fn lambert(n: vec4f, l: vec4f) -> f32 {
+  var result = dot(normalize(n), normalize(l));
+  return max(result, 0.0);
+}
+
 @fragment
 fn fragment_main(fragData: VertexOut) -> @location(0) vec4f
 {
-  var result = vec4f(fragData.uv.x, fragData.uv.y, 0.0, 1.0) * uni_in.light_color;
-  return result;
+  var cc = vec2f(0.5, 0.5);
+  var r = 0.25;
+  var cn = circleNrm(cc, r, fragData.uv);
+  var circ = lambert(cn, uni_in.light_direction);
+  return vec4f(circ, circ, circ, 1.0) * uni_in.light_color;
 }
 </script>
   <canvas></canvas>
