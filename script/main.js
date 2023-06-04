@@ -29,7 +29,20 @@ async function initWebGPU() {
     format: navigator.gpu.getPreferredCanvasFormat(),
     alphaMode: 'premultiplied'
   });
-  const vertices = new Float32Array([0.0, 0.6, 0, 1, 1, 0, 0, 1, -0.5, -0.6, 0, 1, 0, 1, 0, 1, 0.5, -0.6, 0, 1, 0, 0, 1, 1]);
+  const vertices = new Float32Array([
+    -1, 1, 0, 1,
+    1, 0, 0, 1,
+    -1, -1, 0, 1,
+    0, 1, 0, 1,
+    1, 1, 0, 1,
+    0, 0, 1, 1,
+    1, 1, 0, 1,
+    0, 0, 1, 1,
+    -1, -1, 0, 1,
+    0, 1, 0, 1,
+    1, -1, 0, 1,
+    1, 0, 0, 1
+  ]);
   const vertexBuffer = device.createBuffer({
     size: vertices.byteLength,
     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
@@ -77,7 +90,7 @@ async function initWebGPU() {
   const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
   passEncoder.setPipeline(renderPipeline);
   passEncoder.setVertexBuffer(0, vertexBuffer);
-  passEncoder.draw(3);
+  passEncoder.draw(6);
   passEncoder.end();
 
   device.queue.submit([commandEncoder.finish()]);
