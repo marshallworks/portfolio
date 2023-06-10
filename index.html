@@ -26,7 +26,7 @@ struct UniformsIn {
   background: vec4f,
 }
 
-@group(0) @binding(0) var<uniform> uni_in: UniformsIn;
+@group(0) @binding(0) var<uniform> uni: UniformsIn;
 
 @vertex
 fn vertex_main(@location(0) position: vec4f,
@@ -38,52 +38,15 @@ fn vertex_main(@location(0) position: vec4f,
   return output;
 }
 
-const MAX_ITERATIONS: i32 = 256;
-const GRAD_STEP: f32 = 0.02;
-const CLIP_FAR: f32 = 1000.0;
+fn dot2Vec2f(v: vec2f) -> f32 { return dot(v, v); }
+fn dot2Vec3f(v: vec3f) -> f32 { return dot(v, v); }
+fn ndotVec2f(a: vec2f, b: vec2f) -> f32 { return a.x * b.x - a.y * b.y; }
+fn maxVec2f(v: vec2f, m: f32) -> vec2f { return vec2f(max(v.x, m), max(v.y, m)); }
+fn maxVec3f(v: vec3f, m: f32) -> vec3f { return vec3f(max(v.x, m), max(v.y, m), max(v.z, m)); }
+fn clampVec3f(v: vec3f, l: f32, h: f32) -> vec3f { return vec3f(clamp(v.x, l, h), clamp(v.y, l, h), clamp(v.z, l, h)); }
 
-const PI: f32 = 3.14159265359;
-const DEG_TO_RAD: f32 = PI / 180.0;
-
-fn maxVec2f(v: vec2f, m: f32) -> vec2f {
-  return vec2f(max(v.x, m), max(v.y, m));
-}
-
-fn maxVec3f(v: vec3f, m: f32) -> vec3f {
-  return vec3f(max(v.x, m), max(v.y, m), max(v.z, m));
-}
-
-fn rotateX(angle: f32) -> mat4x4<f32> {
-  var c: f32 = cos(angle);
-  var s: f32 = sin(angle);
-  return mat4x4<f32>(
-    1, 0, 0, 0,
-    0, c, -s, 0,
-    0, s, c, 0,
-    0, 0, 0, 1
-  );
-}
-
-fn rotateY(angle: f32) -> mat4x4<f32> {
-  var c: f32 = cos(angle);
-  var s: f32 = sin(angle);
-  return mat4x4<f32>(
-    c, 0, s, 0,
-    0, 1, 0, 0,
-    -s, 0, c, 0,
-    0, 0, 0, 1
-  );
-}
-
-fn rotateZ(angle: f32) -> mat4x4<f32> {
-  var c: f32 = cos(angle);
-  var s: f32 = sin(angle);
-  return mat4x4<f32>(
-    c, -s, 0, 0,
-    s, c, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  );
+fn planeSDF(p: vec3f) -> f32 {
+  return p.y;
 }
 
 fn sphereSDF(p: vec3f, r: f32) -> f32 {
@@ -152,6 +115,307 @@ fn subSDF(d0: f32, d1: f32) -> f32 {
   return max(d0, -d1);
 }
 
+fn opU(d1: vec2f, d2: vec2f) -> vec2f {
+  if (d1.x < d2.x) {
+    return d1;
+  }
+  return d2;
+}
+
+fn map(pos: vec3f) -> vec2f {
+  var res: vec2f = vec2f(pos.y, 0.0);
+
+  if (boxSDF(pos - vec3f(0), vec3f(1)) < res.x) {
+    res = opU(res, vec2f(sphereSDF(pos, 0.5), 10.0));
+  }
+
+  return res;
+}
+
+fn iBox(ro: vec3f, rd: vec3f, rad: vec3f) -> vec2f {
+  var m: vec3f = 1.0 / rd;
+  var n: vec3f = m * ro;
+  var k: vec3f = abs(m) * rad;
+  var t1: vec3f = -n - k;
+  var t2: vec3f = -n + k;
+  return vec2f(max(max(t1.x, t1.y), t1.z),
+               min(min(t2.x, t2.y), t2.z));
+}
+
+fn raycast(ro: vec3f, rd: vec3f) -> vec2f {
+  var res: vec2f = vec2f(-1.0,-1.0);
+
+  var tmin: f32 = 1.0;
+  var tmax: f32 = 20.0;
+
+  // raytrace floor plane
+  var tp1: f32 = (0.0-ro.y)/rd.y;
+  if( tp1>0.0 ) {
+    tmax = min( tmax, tp1 );
+    res = vec2f( tp1, 1.0 );
+  }
+  //else return res;
+
+  // raymarch primitives
+  var tb: vec2f = iBox( ro-vec3(0.0,0.4,-0.5), rd, vec3(2.5,0.41,3.0) );
+  if( tb.x<tb.y && tb.y>0.0 && tb.x<tmax) {
+    //return vec2f(tb.x,2.0);
+    tmin = max(tb.x,tmin);
+    tmax = min(tb.y,tmax);
+
+    var t: f32 = tmin;
+    for (var i: i32 =0; i < 70 && t < tmax; i++) {
+      var h: vec2f = map(ro + rd * t);
+      if (abs(h.x) < (0.0001 * t)) {
+        res = vec2f(t, h.y);
+        break;
+      }
+      t += h.x;
+    }
+  }
+
+  return res;
+}
+
+fn calcSoftshadow(ro: vec3f, rd: vec3f, mint: f32, amax: f32) -> f32 {
+  // bounding volume
+  var tmax: f32 = amax;
+  var tp: f32 = (0.8 - ro.y) / rd.y;
+  if (tp > 0.0) { tmax = min( tmax, tp ); }
+
+  var res: f32 = 1.0;
+  var t: f32 = mint;
+  for (var i: i32 = 0; i < 24; i++) {
+    var h: f32 = map(ro + rd * t).x;
+    var s: f32 = clamp(8.0 * h / t, 0.0, 1.0);
+    res = min(res, s);
+    t += clamp(h, 0.01, 0.2);
+    if (res < 0.004 || t > tmax) { break; }
+  }
+  res = clamp(res, 0.0, 1.0);
+  return res * res * (3.0 - 2.0 * res);
+}
+
+fn calcNormal(pos: vec3f) -> vec3f {
+  var n: vec3f = vec3f(0.0);
+  for(var i: i32 = 0; i < 4; i++) {
+    var e: vec3f = 0.5773 * (2.0 * vec3f(
+      f32(((i+3)>>1)&1),
+      f32((i>>1)&1),
+      f32(i&1)
+    ) - 1.0);
+    n += e*map(pos+0.0005*e).x;
+    //if( n.x+n.y+n.z>100.0 ) break;
+  }
+  return normalize(n);
+}
+
+fn calcAO(pos: vec3f, nor: vec3f) -> f32 {
+  var occ: f32 = 0.0;
+  var sca: f32 = 1.0;
+  for (var i: i32 = 0; i < 5; i++) {
+    var h: f32 = 0.01 + 0.12 * f32(i) / 4.0;
+    var d: f32 = map(pos + h * nor).x;
+    occ += (h - d) * sca;
+    sca *= 0.95;
+    if(occ > 0.35) { break; }
+  }
+  return clamp(1.0 - 3.0 * occ, 0.0, 1.0 ) * (0.5 + 0.5 * nor.y);
+}
+
+fn checkersGradBox(p: vec2f, dpdx: vec2f, dpdy: vec2f) -> f32 {
+  // filter kernel
+  var w: vec2f = abs(dpdx) + abs(dpdy) + 0.001;
+  // analytical integral (box filter)
+  var i: vec2f = 2.0 * (abs(fract((p - 0.5 * w) * 0.5) - 0.5) - abs(fract((p + 0.5 * w) * 0.5) - 0.5)) / w;
+  // xor pattern
+  return 0.5 - 0.5 * i.x * i.y;
+}
+
+fn render(ro: vec3f, rd: vec3f, rdx: vec3f, rdy: vec3f) -> vec3f {
+  // background
+  var col: vec3f = vec3f(0.7, 0.7, 0.9) - max(rd.y,0.0)*0.3;
+
+  // raycast scene
+  var res: vec2f = raycast(ro,rd);
+  var t: f32 = res.x;
+  var m: f32 = res.y;
+  if( m>-0.5 )
+  {
+    var pos: vec3f = ro + t*rd;
+    var nor: vec3f = vec3f(0.0, 1.0, 0.0);
+    if (m >= 1.5) {
+      nor = calcNormal(pos);
+    }
+    var refl: vec3f = reflect( rd, nor );
+
+    // material
+    col = 0.2 + 0.2*sin( m*2.0 + vec3f(0.0,1.0,2.0) );
+    var ks: f32 = 1.0;
+
+    if( m<1.5 )
+    {
+      // project pixel footprint into the plane
+      var dpdx: vec3f = ro.y*(rd/rd.y-rdx/rdx.y);
+      var dpdy: vec3f = ro.y*(rd/rd.y-rdy/rdy.y);
+
+      var f: f32 = checkersGradBox( 3.0*pos.xz, 3.0*dpdx.xz, 3.0*dpdy.xz );
+      col = 0.15 + f*vec3f(0.05);
+      ks = 0.4;
+    }
+
+    // lighting
+    var occ: f32 = calcAO( pos, nor );
+
+    var lin: vec3f = vec3f(0.0);
+
+    // sun
+    {
+      var lig: vec3f = normalize( vec3f(-0.5, 0.4, -0.6) );
+      var hal: vec3f = normalize( lig-rd );
+      var dif: f32 = clamp( dot( nor, lig ), 0.0, 1.0 );
+      //if( dif>0.0001 )
+      dif *= calcSoftshadow( pos, lig, 0.02, 2.5 );
+      var spe: f32 = pow( clamp( dot( nor, hal ), 0.0, 1.0 ),16.0);
+      spe *= dif;
+      spe *= 0.04+0.96*pow(clamp(1.0-dot(hal,lig),0.0,1.0),5.0);
+      //spe *= 0.04+0.96*pow(clamp(1.0-sqrt(0.5*(1.0-dot(rd,lig))),0.0,1.0),5.0);
+      lin += col*2.20*dif*vec3f(1.30,1.00,0.70);
+      lin +=     5.00*spe*vec3f(1.30,1.00,0.70)*ks;
+    }
+    // sky
+    {
+      var dif: f32 = sqrt(clamp( 0.5+0.5*nor.y, 0.0, 1.0 ));
+      dif *= occ;
+      var spe: f32 = smoothstep( -0.2, 0.2, refl.y );
+      spe *= dif;
+      spe *= 0.04+0.96*pow(clamp(1.0+dot(nor,rd),0.0,1.0), 5.0 );
+      //if( spe>0.001 )
+      spe *= calcSoftshadow( pos, refl, 0.02, 2.5 );
+      lin += col*0.60*dif*vec3f(0.40,0.60,1.15);
+      lin +=     2.00*spe*vec3f(0.40,0.60,1.30)*ks;
+    }
+    // back
+    {
+      var dif: f32 = clamp( dot( nor, normalize(vec3f(0.5,0.0,0.6))), 0.0, 1.0 )*clamp( 1.0-pos.y,0.0,1.0);
+      dif *= occ;
+      lin += col*0.55*dif*vec3f(0.25,0.25,0.25);
+    }
+    // sss
+    {
+      var dif: f32 = pow(clamp(1.0+dot(nor,rd),0.0,1.0),2.0);
+      dif *= occ;
+      lin += col*0.25*dif*vec3f(1.00,1.00,1.00);
+    }
+
+    col = lin;
+
+    col = mix( col, vec3f(0.7,0.7,0.9), 1.0-exp( -0.0001*t*t*t ) );
+  }
+
+  return clampVec3f(col, 0.0, 1.0);
+}
+
+fn setCamera(ro: vec3f, ta: vec3f, cr: f32) -> mat3x3<f32> {
+  var cw: vec3f = normalize(ta - ro);
+  var cp: vec3f = vec3(sin(cr), cos(cr), 0.0);
+  var cu: vec3f = normalize(cross(cw,cp));
+  var cv: vec3f = cross(cu,cw);
+  return mat3x3<f32>(cu, cv, cw);
+}
+
+@fragment
+fn fragment_main(fragData: VertexOut) -> @location(0) vec4f {
+  var frag_coor: vec2f = vec2f(fragData.uv.x, fragData.uv.y) * uni.resolution.xy;
+  var mo: vec2f = uni.mouse.xy / uni.resolution.xy;
+  var time: f32 = 32.0;
+
+  // Camera
+  const ta: vec3f = vec3f(0.25, 0.75, -0.75);
+  var ro: vec3f = ta + vec3(4.5 * cos(0.1 * time + 7.0 * mo.x), 2.2, 4.5 * sin(0.1 * time + 7.0 * mo.x));
+  var ca: mat3x3<f32> = setCamera(ro, ta, 0.0);
+
+  const AA: i32 = 2;  // Anti-alias
+  var tot: vec3f = vec3f(0.0);
+  for(var m: i32 = 0; m < AA; m++) {
+  for(var n: i32 = 0; n < AA; n++) {
+    // pixel coordinates
+    var o: vec2f = vec2f(f32(m), f32(n)) / f32(AA) - 0.5;
+    var p: vec2f = (2.0 * (frag_coor + o) - uni.resolution.xy) / uni.resolution.y;
+
+    // focal length
+    const fl: f32 = 2.5;
+
+    // ray direction
+    var rd: vec3f = ca * normalize(vec3f(p, fl));
+
+    // ray differentials
+    var px: vec2f = (2.0 * (frag_coor + vec2(1.0, 0.0)) - uni.resolution.xy) / uni.resolution.y;
+    var py: vec2f = (2.0 * (frag_coor + vec2(0.0, 1.0)) - uni.resolution.xy) / uni.resolution.y;
+    var rdx: vec3f = ca * normalize(vec3(px, fl));
+    var rdy: vec3f = ca * normalize(vec3(py, fl));
+
+    // render
+    var col: vec3f = render(ro, rd, rdx, rdy);
+
+    // gain
+    // col = col * 3.0/ (2.5 + col);
+
+    // gamma
+    col = pow(col, vec3(0.4545));
+
+    tot += col;
+  }
+  }
+  tot /= f32(AA*AA);
+
+  return vec4( tot, 1.0 );
+}
+
+
+/*
+const MAX_ITERATIONS: i32 = 256;
+const GRAD_STEP: f32 = 0.02;
+const CLIP_FAR: f32 = 1000.0;
+
+const PI: f32 = 3.14159265359;
+const DEG_TO_RAD: f32 = PI / 180.0;
+
+fn rotateX(angle: f32) -> mat4x4<f32> {
+  var c: f32 = cos(angle);
+  var s: f32 = sin(angle);
+  return mat4x4<f32>(
+    1, 0, 0, 0,
+    0, c, -s, 0,
+    0, s, c, 0,
+    0, 0, 0, 1
+  );
+}
+
+fn rotateY(angle: f32) -> mat4x4<f32> {
+  var c: f32 = cos(angle);
+  var s: f32 = sin(angle);
+  return mat4x4<f32>(
+    c, 0, s, 0,
+    0, 1, 0, 0,
+    -s, 0, c, 0,
+    0, 0, 0, 1
+  );
+}
+
+fn rotateZ(angle: f32) -> mat4x4<f32> {
+  var c: f32 = cos(angle);
+  var s: f32 = sin(angle);
+  return mat4x4<f32>(
+    c, -s, 0, 0,
+    s, c, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  );
+}
+
+
+
 fn distField(p: vec3f) -> f32 {
   var d0: f32 = roundedCylinderSDF(p + vec3f(0, 1.1, 0), 0.8, 0.04, 0.1);
   var d1: f32 = roundedCylinderSDF(p + vec3f(0, -1.1, 0), 0.8, 0.04, 0.1);
@@ -174,11 +438,12 @@ fn gradient(pos: vec3f) -> vec3f {
 	);
 }
 
+
 fn fresnel(F0: vec3f, h: vec3f, l: vec3f) -> vec3f {
 	return F0 + (1.0 - F0) * pow(clamp(1.0 - dot(h, l), 0.0, 1.0), 5.0);
 }
 
-fn shading(v: vec3f, n: vec3f, dir: vec3f, eye: vec3f ) -> vec3f {
+fn shading(v: vec3f, n: vec3f, dir: vec3f, eye: vec3f, t: f32) -> vec3f {
 	const shininess: f32 = 16.0;
 
 	var result: vec3f = vec3f(0.0 , 0.0, 0.0);
@@ -196,7 +461,7 @@ fn shading(v: vec3f, n: vec3f, dir: vec3f, eye: vec3f ) -> vec3f {
   var F: vec3f = fresnel(Ks, normalize(vl - dir), vl);
   specular = pow(specular, vec3(shininess));
 
-  result += uni_in.light_0_color.xyz * mix(diffuse, specular, F);
+  var light_0: vec3f = uni_in.light_0_color.xyz * mix(diffuse, specular, F);
 
   vl = normalize(uni_in.light_1_pos.xyz - v);
   diffuse = Kd * (vec3f(max(0.0, dot(vl, n))));
@@ -206,7 +471,17 @@ fn shading(v: vec3f, n: vec3f, dir: vec3f, eye: vec3f ) -> vec3f {
 
   result += uni_in.light_1_color.xyz * mix(diffuse, specular, F);
 
-  result += uni_in.ambient.xyz;
+  var pos: vec3f = uni_in.light_0_pos.xyz + t * eye;
+  var lig: vec3f = vec3f(0.57703);
+  var nor: vec3f = calcNormal(pos);
+  var dif: f32 = clamp(dot(nor, lig), 0, 1);
+  var amb: f32 = 0.5 + 0.5 * dot(nor, vec3(0.0, 1.0, 0.0));
+  if (dif < 0.001) {
+    dif *= calcSoftshadow(pos + nor * 0.001, lig, 0.001, 1.0, 32.0);
+  }
+  result += uni_in.ambient.xyz * amb + light_0 * dif;
+
+  result = nor;
 
 	return result;
 }
@@ -235,6 +510,7 @@ fn fragment_main(fragData: VertexOut) -> @location(0) vec4f
   var o: vec3f = eye;
   var n: vec3f = vec3f(0.0);
   var t: f32 = 0.0;
+  var t_sub: f32 = 0.0;
   var d: f32 = 10000.0;
   var dt: f32 = 0.0;
   for (var i: i32 = 0; i < MAX_ITERATIONS; i++) {
@@ -254,6 +530,7 @@ fn fragment_main(fragData: VertexOut) -> @location(0) vec4f
     return uni_in.background;
   }
 
+  t_sub = t;
   t -= dt;
   for (var i: i32 = 0; i < 4; i++) {
     dt *= 0.5;
@@ -269,9 +546,10 @@ fn fragment_main(fragData: VertexOut) -> @location(0) vec4f
 
   var pos: vec3f = eye + dir * depth;
 
-  var color: vec3f = shading(pos, n, dir, eye);
+  var color: vec3f = shading(pos, n, dir, eye, t_sub);
   return vec4f(pow(color, vec3(1.0/1.2)), 1.0);
 }
+*/
 </script>
   <canvas></canvas>
   <script src="script/main.js"></script>
