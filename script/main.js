@@ -64,15 +64,27 @@ async function initWebGPU() {
     }
   ];
   const uniformBufferSize =
-    4 * 4 + // light direction
-    4 * 4;  // light color
+    2 * 4 + // mouse
+    2 * 4 + // resolution
+    4 * 4 + // light 0 pos
+    4 * 4 + // light 0 color
+    4 * 4 + // light 1 pos
+    4 * 4 * // light 1 color
+    4 * 4 * // ambient
+    4 * 4;  // background
   const uniformBuffer = device.createBuffer({
     size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
   });
   const uniformValues = new Float32Array(uniformBufferSize / 4);
-  uniformValues.set([0, 0, -1, 1], 0);
-  uniformValues.set([1.0, 1.0, 1.0, 1.0], 4);
+  uniformValues.set([0, 200], 0);
+  uniformValues.set([WIDTH, HEIGHT], 2);
+  uniformValues.set([-20.0, -20.0, 20.0, 1.0], 4);
+  uniformValues.set([1, 1, 0.95, 1], 8);
+  uniformValues.set([40.0, 20.0, 20.0, 1.0], 12);
+  uniformValues.set([0.7, 0.75, 0.88, 1], 16);
+  uniformValues.set([0.2, 0.2, 0.2, 1], 20);
+  uniformValues.set([0.7, 0.7, 0.7, 1], 24);
   const pipelineDescriptor = {
     vertex: {
       module: shaderModule,

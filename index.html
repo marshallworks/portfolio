@@ -16,8 +16,14 @@ struct VertexOut {
 }
 
 struct UniformsIn {
-  light_direction: vec4f,
-  light_color: vec4f,
+  mouse: vec2f,
+  resolution: vec2f,
+  light_0_pos: vec4f,
+  light_0_color: vec4f,
+  light_1_pos: vec4f,
+  light_1_color: vec4f,
+  ambient: vec4f,
+  background: vec4f,
 }
 
 @group(0) @binding(0) var<uniform> uni_in: UniformsIn;
@@ -32,28 +38,239 @@ fn vertex_main(@location(0) position: vec4f,
   return output;
 }
 
-fn circleNrm(center: vec2f, radius: f32, uv: vec2f) -> vec4f {
-  var center_3d = vec4f(center.x, center.y, 0.0, 1.0);
-  var uv_3d = vec4f(uv.x, uv.y, -.1, 1.0);
-  var result = normalize(uv_3d - center_3d);
-  var len = length(uv - center);
-  var s = smoothstep(len, radius + 0.01, radius - 0.01);
-  return mix(result, vec4f(0, 0, 1, 1), 1.0 - s);
+const MAX_ITERATIONS: i32 = 256;
+const GRAD_STEP: f32 = 0.02;
+const CLIP_FAR: f32 = 1000.0;
+
+const PI: f32 = 3.14159265359;
+const DEG_TO_RAD: f32 = PI / 180.0;
+
+fn maxVec2f(v: vec2f, m: f32) -> vec2f {
+  return vec2f(max(v.x, m), max(v.y, m));
 }
 
-fn lambert(n: vec4f, l: vec4f) -> f32 {
-  var result = dot(normalize(n), normalize(l));
-  return max(result, 0.0);
+fn maxVec3f(v: vec3f, m: f32) -> vec3f {
+  return vec3f(max(v.x, m), max(v.y, m), max(v.z, m));
+}
+
+fn rotateX(angle: f32) -> mat4x4<f32> {
+  var c: f32 = cos(angle);
+  var s: f32 = sin(angle);
+  return mat4x4<f32>(
+    1, 0, 0, 0,
+    0, c, -s, 0,
+    0, s, c, 0,
+    0, 0, 0, 1
+  );
+}
+
+fn rotateY(angle: f32) -> mat4x4<f32> {
+  var c: f32 = cos(angle);
+  var s: f32 = sin(angle);
+  return mat4x4<f32>(
+    c, 0, s, 0,
+    0, 1, 0, 0,
+    -s, 0, c, 0,
+    0, 0, 0, 1
+  );
+}
+
+fn rotateZ(angle: f32) -> mat4x4<f32> {
+  var c: f32 = cos(angle);
+  var s: f32 = sin(angle);
+  return mat4x4<f32>(
+    c, -s, 0, 0,
+    s, c, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+  );
+}
+
+fn sphereSDF(p: vec3f, r: f32) -> f32 {
+  return length(p) - r;
+}
+
+fn boxSDF(p: vec3f, b: vec3f) -> f32 {
+  var d: vec3f = abs(p) - b;
+  return min(max(d.x,max(d.y,d.z)),0.0) + length(maxVec3f(d, 0.0));
+}
+
+fn roundedBoxSDF(p: vec3f, b: vec3f, r: f32) -> f32 {
+  var q: vec3f = abs(p) - b;
+  return length(maxVec3f(q, 0.0)) + min(max(q.x, max(q.y,q.z)), 0.0) - r;
+}
+
+fn cylinderSDF(p: vec3f, c: vec3f) -> f32 {
+  return length(p.xz - c.xy) - c.z;
+}
+
+fn cappedCylinderSDF(p: vec3f, h: f32, r: f32) -> f32 {
+  var d: vec2f = abs(vec2f(length(p.xz), p.y)) - vec2f(r, h);
+  return min(max(d.x, d.y), 0.0) + length(maxVec2f(d, 0.0));
+}
+
+fn arbCappedCylinderSDF(p: vec3f, a: vec3f, b: vec3f, r: f32) -> f32 {
+  var ba: vec3f = b - a;
+  var pa: vec3f = p - a;
+  var baba: f32 = dot(ba,ba);
+  var paba: f32 = dot(pa,ba);
+  var x: f32 = length(pa * baba - ba * paba) - r * baba;
+  var y: f32 = abs(paba - baba * 0.5) - baba * 0.5;
+  var x2: f32 = x * x;
+  var y2: f32 = y * y * baba;
+  var d: f32 = 0.0;
+  if (max(x, y) < 0.0) {
+    d = -min(x2, y2);
+  } else {
+    var x_part = 0.0;
+    var y_part = 0.0;
+    if (x > 0.0) {
+      x_part = x2;
+    }
+    if (y > 0.0) {
+      y_part = y2;
+    }
+    d = x_part + y_part;
+  }
+  return sign(d) * sqrt(abs(d)) / baba;
+}
+
+fn roundedCylinderSDF(p: vec3f, ra: f32, rb: f32, h: f32) -> f32 {
+  var d: vec2f = vec2f(length(p.xz) - 2.0 * ra + rb, abs(p.y) - h);
+  return min(max(d.x, d.y), 0.0) + length(maxVec2f(d, 0.0)) - rb;
+}
+
+fn unionSDF(d0: f32, d1: f32) -> f32 {
+  return min(d0, d1);
+}
+
+fn interSDF(d0: f32, d1: f32) -> f32 {
+  return max(d0, d1);
+}
+
+fn subSDF(d0: f32, d1: f32) -> f32 {
+  return max(d0, -d1);
+}
+
+fn distField(p: vec3f) -> f32 {
+  var d0: f32 = roundedCylinderSDF(p + vec3f(0, 1.1, 0), 0.8, 0.04, 0.1);
+  var d1: f32 = roundedCylinderSDF(p + vec3f(0, -1.1, 0), 0.8, 0.04, 0.1);
+  var d2: f32 = cylinderSDF(p, vec3f(0.0, 0.0, 1.5));
+  var d3: f32 = roundedBoxSDF(p, vec3f(1.9, 1.9, .01), 0.1);
+  var d4: f32 = sphereSDF(p, 0.5);
+  return unionSDF(unionSDF(subSDF(unionSDF(d0, d1), d2), d3), d4);
+}
+
+fn gradient(pos: vec3f) -> vec3f {
+	const dx: vec3f = vec3f(GRAD_STEP, 0.0, 0.0);
+	const dy: vec3f = vec3f(0.0, GRAD_STEP, 0.0);
+	const dz: vec3f = vec3f(0.0, 0.0, GRAD_STEP);
+	return normalize(
+		vec3(
+			distField(pos + dx) - distField(pos - dx),
+			distField(pos + dy) - distField(pos - dy),
+			distField(pos + dz) - distField(pos - dz)
+		)
+	);
+}
+
+fn fresnel(F0: vec3f, h: vec3f, l: vec3f) -> vec3f {
+	return F0 + (1.0 - F0) * pow(clamp(1.0 - dot(h, l), 0.0, 1.0), 5.0);
+}
+
+fn shading(v: vec3f, n: vec3f, dir: vec3f, eye: vec3f ) -> vec3f {
+	const shininess: f32 = 16.0;
+
+	var result: vec3f = vec3f(0.0 , 0.0, 0.0);
+
+	var refl: vec3f = reflect(dir, n);
+
+  const Ks: vec3f = vec3f(0.5, 0.5, 0.5);
+  const Kd: vec3f = vec3f(1.0, 1.0, 1.0);
+
+  var vl: vec3f = normalize(uni_in.light_0_pos.xyz - v);
+
+  var diffuse: vec3f  = Kd * vec3f(max(0.0, dot(vl, n)));
+  var specular: vec3f = vec3f(max(0.0, dot(vl, refl)));
+
+  var F: vec3f = fresnel(Ks, normalize(vl - dir), vl);
+  specular = pow(specular, vec3(shininess));
+
+  result += uni_in.light_0_color.xyz * mix(diffuse, specular, F);
+
+  vl = normalize(uni_in.light_1_pos.xyz - v);
+  diffuse = Kd * (vec3f(max(0.0, dot(vl, n))));
+  specular = vec3f(max(0.0, dot(vl, refl)));
+  F = fresnel(Ks, normalize(vl - dir), vl);
+  specular = pow(specular, vec3(shininess));
+
+  result += uni_in.light_1_color.xyz * mix(diffuse, specular, F);
+
+  result += uni_in.ambient.xyz;
+
+	return result;
+}
+
+fn rayDir(fov: f32, size: vec2f, pos: vec2f) -> vec3f {
+	var xy: vec2f = pos - size * 0.5;
+
+	var cot_half_fov: f32 = tan((90.0 - fov * 0.5) * DEG_TO_RAD);
+	var z: f32 = size.y * 0.5 * cot_half_fov;
+
+	return normalize(vec3f(xy, -z));
 }
 
 @fragment
 fn fragment_main(fragData: VertexOut) -> @location(0) vec4f
 {
-  var cc = vec2f(0.5, 0.5);
-  var r = 0.25;
-  var cn = circleNrm(cc, r, fragData.uv);
-  var circ = lambert(cn, uni_in.light_direction);
-  return vec4f(circ, circ, circ, 1.0) * uni_in.light_color;
+  var frag_coor: vec2f = fragData.uv * uni_in.resolution.xy;
+  var dir: vec3f = rayDir(45.0, uni_in.resolution.xy, frag_coor);
+  var eye: vec3f = vec3f(0.0, 0.0, 5.0);
+  var rot: mat4x4<f32> = rotateZ(PI * 0.5);
+  dir = (rot * vec4f(dir, 1.0)).xyz;
+  eye = (rot * vec4f(eye, 1.0)).xyz;
+
+  // ray marching
+  var depth: f32 = CLIP_FAR;
+  var o: vec3f = eye;
+  var n: vec3f = vec3f(0.0);
+  var t: f32 = 0.0;
+  var d: f32 = 10000.0;
+  var dt: f32 = 0.0;
+  for (var i: i32 = 0; i < MAX_ITERATIONS; i++) {
+    var v: vec3f = o + dir * t;
+    d = distField(v);
+    if (d < 0.001) {
+      break;
+    }
+    dt = min(abs(d), 0.1);
+    t += dt;
+    if (t > depth) {
+      break;
+    }
+  }
+
+  if ( d >= 0.001 ) {
+    return uni_in.background;
+  }
+
+  t -= dt;
+  for (var i: i32 = 0; i < 4; i++) {
+    dt *= 0.5;
+    var v: vec3f = o + dir * (t + dt);
+    if (distField(v) >= 0.001) {
+      t += dt;
+    }
+  }
+
+  depth = t;
+  // n = normalize(gradient(o + dir * t));
+  n = normalize(o + dir * t);
+
+  var pos: vec3f = eye + dir * depth;
+
+  var color: vec3f = shading(pos, n, dir, eye);
+  return vec4f(pow(color, vec3(1.0/1.2)), 1.0);
 }
 </script>
   <canvas></canvas>
