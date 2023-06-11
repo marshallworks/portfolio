@@ -16,6 +16,7 @@ struct VertexOut {
 }
 
 struct UniformsIn {
+  time: f32,
   mouse: vec2f,
   resolution: vec2f,
   light_0_pos: vec4f,
@@ -38,12 +39,74 @@ fn vertex_main(@location(0) position: vec4f,
   return output;
 }
 
+const PI: f32 = 3.14159265359;
+
 fn dot2Vec2f(v: vec2f) -> f32 { return dot(v, v); }
 fn dot2Vec3f(v: vec3f) -> f32 { return dot(v, v); }
 fn ndotVec2f(a: vec2f, b: vec2f) -> f32 { return a.x * b.x - a.y * b.y; }
 fn maxVec2f(v: vec2f, m: f32) -> vec2f { return vec2f(max(v.x, m), max(v.y, m)); }
 fn maxVec3f(v: vec3f, m: f32) -> vec3f { return vec3f(max(v.x, m), max(v.y, m), max(v.z, m)); }
 fn clampVec3f(v: vec3f, l: f32, h: f32) -> vec3f { return vec3f(clamp(v.x, l, h), clamp(v.y, l, h), clamp(v.z, l, h)); }
+
+fn rotateX(angle: f32) -> mat3x3<f32> {
+  var c: f32 = cos(angle);
+  var s: f32 = sin(angle);
+  return mat3x3<f32>(
+    1, 0, 0,
+    0, c, -s,
+    0, s, c
+  );
+}
+
+fn rotateY(angle: f32) -> mat3x3<f32> {
+  var c: f32 = cos(angle);
+  var s: f32 = sin(angle);
+  return mat3x3<f32>(
+    c, 0, s,
+    0, 1, 0,
+    -s, 0, c
+  );
+}
+
+fn rotateZ(angle: f32) -> mat3x3<f32> {
+  var c: f32 = cos(angle);
+  var s: f32 = sin(angle);
+  return mat3x3<f32>(
+    c, -s, 0,
+    s, c, 0,
+    0, 0, 1
+  );
+}
+
+fn det(matrix: mat2x2<f32>) -> f32 {
+  return matrix[0].x * matrix[1].y - matrix[0].y * matrix[1].x;
+}
+
+fn inverse(matrix: mat3x3<f32>) -> mat3x3<f32> {
+  var row0: vec3f = matrix[0];
+  var row1: vec3f = matrix[1];
+  var row2: vec3f = matrix[2];
+
+  var minors0: vec3f = vec3f(
+      det(mat2x2<f32>(row1.y, row1.z, row2.y, row2.z)),
+      det(mat2x2<f32>(row1.z, row1.x, row2.z, row2.x)),
+      det(mat2x2<f32>(row1.x, row1.y, row2.x, row2.y))
+  );
+  var minors1: vec3f = vec3f(
+      det(mat2x2<f32>(row2.y, row2.z, row0.y, row0.z)),
+      det(mat2x2<f32>(row2.z, row2.x, row0.z, row0.x)),
+      det(mat2x2<f32>(row2.x, row2.y, row0.x, row0.y))
+  );
+  var minors2: vec3f = vec3f(
+      det(mat2x2<f32>(row0.y, row0.z, row1.y, row1.z)),
+      det(mat2x2<f32>(row0.z, row0.x, row1.z, row1.x)),
+      det(mat2x2<f32>(row0.x, row0.y, row1.x, row1.y))
+  );
+
+  var adj: mat3x3<f32> = transpose(mat3x3<f32>(minors0, minors1, minors2));
+
+  return (1.0 / dot(row0, minors0)) * adj;
+}
 
 fn planeSDF(p: vec3f) -> f32 {
   return p.y;
@@ -63,8 +126,16 @@ fn roundedBoxSDF(p: vec3f, b: vec3f, r: f32) -> f32 {
   return length(maxVec3f(q, 0.0)) + min(max(q.x, max(q.y,q.z)), 0.0) - r;
 }
 
-fn cylinderSDF(p: vec3f, c: vec3f) -> f32 {
+fn cylinderXSDF(p: vec3f, c: vec3f) -> f32 {
+  return length(p.yz - c.xy) - c.z;
+}
+
+fn cylinderYSDF(p: vec3f, c: vec3f) -> f32 {
   return length(p.xz - c.xy) - c.z;
+}
+
+fn cylinderZSDF(p: vec3f, c: vec3f) -> f32 {
+  return length(p.xy - c.xz) - c.z;
 }
 
 fn cappedCylinderSDF(p: vec3f, h: f32, r: f32) -> f32 {
@@ -98,9 +169,32 @@ fn arbCappedCylinderSDF(p: vec3f, a: vec3f, b: vec3f, r: f32) -> f32 {
   return sign(d) * sqrt(abs(d)) / baba;
 }
 
-fn roundedCylinderSDF(p: vec3f, ra: f32, rb: f32, h: f32) -> f32 {
+fn roundedCylinderXSDF(p: vec3f, ra: f32, rb: f32, h: f32) -> f32 {
+  var d: vec2f = vec2f(length(p.yz) - 2.0 * ra + rb, abs(p.x) - h);
+  return min(max(d.x, d.y), 0.0) + length(maxVec2f(d, 0.0)) - rb;
+}
+
+fn roundedCylinderYSDF(p: vec3f, ra: f32, rb: f32, h: f32) -> f32 {
   var d: vec2f = vec2f(length(p.xz) - 2.0 * ra + rb, abs(p.y) - h);
   return min(max(d.x, d.y), 0.0) + length(maxVec2f(d, 0.0)) - rb;
+}
+
+fn roundedCylinderZSDF(p: vec3f, ra: f32, rb: f32, h: f32) -> f32 {
+  var d: vec2f = vec2f(length(p.xy) - 2.0 * ra + rb, abs(p.z) - h);
+  return min(max(d.x, d.y), 0.0) + length(maxVec2f(d, 0.0)) - rb;
+}
+
+fn roundConeSDF(p: vec3f, r1: f32, r2: f32, h: f32) -> f32 {
+  // sampling independent computations (only depend on shape)
+  var b: f32 = (r1 - r2) / h;
+  var a: f32 = sqrt(1.0 - b * b);
+
+  // sampling dependant computations
+  var q: vec2f = vec2f(length(p.xz), p.y);
+  var k: f32 = dot(q, vec2f(-b, a));
+  if(k < 0.0) { return length(q) - r1; }
+  if(k > a * h) { return length(q - vec2(0.0, h)) - r2; }
+  return dot(q, vec2f(a, b)) - r1;
 }
 
 fn unionSDF(d0: f32, d1: f32) -> f32 {
@@ -115,6 +209,21 @@ fn subSDF(d0: f32, d1: f32) -> f32 {
   return max(d0, -d1);
 }
 
+fn smoothUnionSDF(d1: f32, d2: f32, k: f32) -> f32 {
+  var h: f32 = clamp(0.5 + 0.5 * ( d2 - d1) / k, 0.0, 1.0);
+  return mix(d2, d1, h) - k * h * (1.0 - h);
+}
+
+fn smoothSubSDF(d1: f32, d2: f32, k: f32) -> f32 {
+  var h: f32 = clamp(0.5 - 0.5 * (d1 + d2) / k, 0.0, 1.0);
+  return mix(d1, -d2, h) + k * h * (1.0 - h);
+}
+
+fn smoothInterSDF(d1: f32, d2: f32, k: f32) -> f32 {
+  var h: f32 = clamp(0.5 - 0.5 * (d2 - d1) / k, 0.0, 1.0);
+  return mix(d2, d1, h) + k * h * (1.0 - h);
+}
+
 fn opU(d1: vec2f, d2: vec2f) -> vec2f {
   if (d1.x < d2.x) {
     return d1;
@@ -125,9 +234,19 @@ fn opU(d1: vec2f, d2: vec2f) -> vec2f {
 fn map(pos: vec3f) -> vec2f {
   var res: vec2f = vec2f(pos.y, 0.0);
 
-  if (boxSDF(pos - vec3f(0), vec3f(1)) < res.x) {
-    res = opU(res, vec2f(sphereSDF(pos, 0.5), 10.0));
-  }
+  var rr0: f32 = roundedBoxSDF(pos, vec3f(0.13, 0.01, 0.13), 0.01);
+  var s0: f32 = sphereSDF(pos + vec3f(0, -0.146, 0), 0.15);
+  var s1: f32 = sphereSDF(pos + vec3f(0, 0.02, 0), 0.05);
+  var c0: f32 = roundedCylinderXSDF(pos + vec3f( 0.1, 0, 0), 0.05, 0.01, 0.01);
+  var c1: f32 = roundedCylinderXSDF(pos + vec3f(-0.1, 0, 0), 0.05, 0.01, 0.01);
+  var c2: f32 = cylinderXSDF(pos, vec3f(0, 0, 0.085));
+  var rcT: mat3x3<f32> = rotateX(0.25 * PI);
+  var rc0: f32 = roundConeSDF(inverse(rcT) * (pos + vec3f(0, -0.04, 0.03)), 0.02, 0.03, 0.12);
+
+  res = opU(res, vec2f(subSDF(unionSDF(c0, c1), c2), 31.9));
+  res = opU(res, vec2f(smoothSubSDF(rr0, s0, 0.01), 31.9));
+  res = opU(res, vec2f(s1, 5.0));
+  res = opU(res, vec2f(rc0, 31.9));
 
   return res;
 }
@@ -250,7 +369,7 @@ fn render(ro: vec3f, rd: vec3f, rdx: vec3f, rdy: vec3f) -> vec3f {
     var refl: vec3f = reflect( rd, nor );
 
     // material
-    col = 0.2 + 0.2*sin( m*2.0 + vec3f(0.0,1.0,2.0) );
+    col = 0.2 + 0.2*sin( m*2.0 + vec3f(0.0,0.5,0.5) );
     var ks: f32 = 1.0;
 
     if( m<1.5 )
@@ -271,7 +390,7 @@ fn render(ro: vec3f, rd: vec3f, rdx: vec3f, rdy: vec3f) -> vec3f {
 
     // sun
     {
-      var lig: vec3f = normalize( vec3f(-0.5, 0.4, -0.6) );
+      var lig: vec3f = normalize(uni.light_0_pos.xyz);
       var hal: vec3f = normalize( lig-rd );
       var dif: f32 = clamp( dot( nor, lig ), 0.0, 1.0 );
       //if( dif>0.0001 )
@@ -328,12 +447,19 @@ fn setCamera(ro: vec3f, ta: vec3f, cr: f32) -> mat3x3<f32> {
 fn fragment_main(fragData: VertexOut) -> @location(0) vec4f {
   var frag_coor: vec2f = vec2f(fragData.uv.x, fragData.uv.y) * uni.resolution.xy;
   var mo: vec2f = uni.mouse.xy / uni.resolution.xy;
-  var time: f32 = 32.0;
+  var time: f32 = 32.0 + uni.time * 1.5;
 
   // Camera
-  const ta: vec3f = vec3f(0.25, 0.75, -0.75);
-  var ro: vec3f = ta + vec3(4.5 * cos(0.1 * time + 7.0 * mo.x), 2.2, 4.5 * sin(0.1 * time + 7.0 * mo.x));
-  var ca: mat3x3<f32> = setCamera(ro, ta, 0.0);
+  const target_cam: vec3f = vec3f(0, 0, 0);
+  const radius_cam: f32 = 0.1;  // 1.5;
+  const hight_cam: f32 = 2;  // 0.5;
+  const time_speed_cam: f32 = 0;  // 0.05;
+  const mouse_speed_cam: f32 = 2.5;
+  var ro: vec3f = target_cam + vec3(
+      radius_cam * cos(time_speed_cam * time + mouse_speed_cam * mo.x),
+      hight_cam,
+      radius_cam * sin(time_speed_cam * time + mouse_speed_cam * mo.x));
+  var ca: mat3x3<f32> = setCamera(ro, target_cam, 0.0);
 
   const AA: i32 = 2;  // Anti-alias
   var tot: vec3f = vec3f(0.0);
@@ -378,42 +504,7 @@ const MAX_ITERATIONS: i32 = 256;
 const GRAD_STEP: f32 = 0.02;
 const CLIP_FAR: f32 = 1000.0;
 
-const PI: f32 = 3.14159265359;
 const DEG_TO_RAD: f32 = PI / 180.0;
-
-fn rotateX(angle: f32) -> mat4x4<f32> {
-  var c: f32 = cos(angle);
-  var s: f32 = sin(angle);
-  return mat4x4<f32>(
-    1, 0, 0, 0,
-    0, c, -s, 0,
-    0, s, c, 0,
-    0, 0, 0, 1
-  );
-}
-
-fn rotateY(angle: f32) -> mat4x4<f32> {
-  var c: f32 = cos(angle);
-  var s: f32 = sin(angle);
-  return mat4x4<f32>(
-    c, 0, s, 0,
-    0, 1, 0, 0,
-    -s, 0, c, 0,
-    0, 0, 0, 1
-  );
-}
-
-fn rotateZ(angle: f32) -> mat4x4<f32> {
-  var c: f32 = cos(angle);
-  var s: f32 = sin(angle);
-  return mat4x4<f32>(
-    c, -s, 0, 0,
-    s, c, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1
-  );
-}
-
 
 
 fn distField(p: vec3f) -> f32 {

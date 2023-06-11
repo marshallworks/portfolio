@@ -9,6 +9,14 @@ CANVAS.style.width = `${WIDTH}px`;
 CANVAS.style.height = `${HEIGHT}px`;
 
 async function initWebGPU() {
+  let mouseX = 0;
+  let mouseY = 0;
+
+  CANVAS.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
   if (!navigator.gpu) {
     console.error('WebGPU not supported.');
     return;
@@ -31,22 +39,22 @@ async function initWebGPU() {
   });
   const vertices = new Float32Array([
     -1, 1, 0, 1,
+    0, 1,
+
+    -1, -1, 0, 1,
     0, 0,
 
-    -1, -1, 0, 1,
-    0, 1,
+    1, 1, 0, 1,
+    1, 1,
 
     1, 1, 0, 1,
-    1, 0,
-
-    1, 1, 0, 1,
-    1, 0,
+    1, 1,
 
     -1, -1, 0, 1,
-    0, 1,
+    0, 0,
 
     1, -1, 0, 1,
-    1, 1,
+    1, 0,
   ]);
   const vertexBuffer = device.createBuffer({
     size: vertices.byteLength,
@@ -64,6 +72,7 @@ async function initWebGPU() {
     }
   ];
   const uniformBufferSize =
+    2 * 4 + // time
     2 * 4 + // mouse
     2 * 4 + // resolution
     4 * 4 + // light 0 pos
@@ -77,14 +86,15 @@ async function initWebGPU() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
   });
   const uniformValues = new Float32Array(uniformBufferSize / 4);
-  uniformValues.set([0, 200], 0);
-  uniformValues.set([WIDTH, HEIGHT], 2);
-  uniformValues.set([-20.0, -20.0, 20.0, 1.0], 4);
-  uniformValues.set([1, 1, 0.95, 1], 8);
-  uniformValues.set([40.0, 20.0, 20.0, 1.0], 12);
-  uniformValues.set([0.7, 0.75, 0.88, 1], 16);
-  uniformValues.set([0.2, 0.2, 0.2, 1], 20);
-  uniformValues.set([0.7, 0.7, 0.7, 1], 24);
+  uniformValues.set([0, 0], 0);
+  uniformValues.set([mouseX, mouseY], 2);
+  uniformValues.set([WIDTH, HEIGHT], 4);
+  uniformValues.set([-0.5, 0.4, -0.6, 1.0], 6);
+  uniformValues.set([1, 1, 0.95, 1], 10);
+  uniformValues.set([40.0, 20.0, 20.0, 1.0], 14);
+  uniformValues.set([0.7, 0.75, 0.88, 1], 18);
+  uniformValues.set([0.2, 0.2, 0.2, 1], 22);
+  uniformValues.set([0.7, 0.7, 0.7, 1], 26);
   const pipelineDescriptor = {
     vertex: {
       module: shaderModule,
@@ -104,29 +114,38 @@ async function initWebGPU() {
     layout: renderPipeline.getBindGroupLayout(0),
     entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
   });
-  device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
-  const commandEncoder = device.createCommandEncoder();
-  const clearColor = { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
 
-  const renderPassDescriptor = {
-    colorAttachments: [
-      {
-        clearValue: clearColor,
-        loadOp: 'clear',
-        storeOp: 'store',
-        view: CTX.getCurrentTexture().createView(),
-      },
-    ],
+  const draw = (time) => {
+    uniformValues.set([time / 1000, time / 1000, mouseX, mouseY], 0);
+
+    device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+    const commandEncoder = device.createCommandEncoder();
+    const clearColor = { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
+
+    const renderPassDescriptor = {
+      colorAttachments: [
+        {
+          clearValue: clearColor,
+          loadOp: 'clear',
+          storeOp: 'store',
+          view: CTX.getCurrentTexture().createView(),
+        },
+      ],
+    };
+
+    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+    passEncoder.setPipeline(renderPipeline);
+    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.setVertexBuffer(0, vertexBuffer);
+    passEncoder.draw(6);
+    passEncoder.end();
+
+    device.queue.submit([commandEncoder.finish()]);
+
+    window.requestAnimationFrame(draw);
   };
 
-  const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
-  passEncoder.setPipeline(renderPipeline);
-  passEncoder.setBindGroup(0, bindGroup);
-  passEncoder.setVertexBuffer(0, vertexBuffer);
-  passEncoder.draw(6);
-  passEncoder.end();
-
-  device.queue.submit([commandEncoder.finish()]);
+  draw();
 }
 
 initWebGPU();
