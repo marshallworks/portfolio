@@ -72,13 +72,16 @@ async function initWebGPU() {
     }
   ];
   const uniformBufferSize =
-    2 * 4 + // time
+    1 * 4 + // time
+    1 * 4 + // component_id
+    1 * 4 + // transition_a
+    1 * 4 + // transition_b
     2 * 4 + // mouse
     2 * 4 + // resolution
-    4 * 4 + // light 0 pos
-    4 * 4 + // light 0 color
-    4 * 4 + // light 1 pos
-    4 * 4 * // light 1 color
+    4 * 4 + // sun pos
+    4 * 4 + // sun color
+    4 * 4 + // sky color
+    4 * 4 * // fog color
     4 * 4 * // ambient
     4 * 4;  // background
   const uniformBuffer = device.createBuffer({
@@ -86,15 +89,6 @@ async function initWebGPU() {
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
   });
   const uniformValues = new Float32Array(uniformBufferSize / 4);
-  uniformValues.set([0, 0], 0);
-  uniformValues.set([mouseX, mouseY], 2);
-  uniformValues.set([WIDTH, HEIGHT], 4);
-  uniformValues.set([-0.5, 0.4, -0.6, 1.0], 6);
-  uniformValues.set([1, 1, 0.95, 1], 10);
-  uniformValues.set([40.0, 20.0, 20.0, 1.0], 14);
-  uniformValues.set([0.7, 0.75, 0.88, 1], 18);
-  uniformValues.set([0.2, 0.2, 0.2, 1], 22);
-  uniformValues.set([0.7, 0.7, 0.7, 1], 26);
   const pipelineDescriptor = {
     vertex: {
       module: shaderModule,
@@ -116,7 +110,20 @@ async function initWebGPU() {
   });
 
   const draw = (time) => {
-    uniformValues.set([time / 1000, time / 1000, mouseX, mouseY], 0);
+    uniformValues.set([
+      time / 1000,             // time
+      0,                       // component_id
+      0,                       // transition_a
+      0,                       // transition_b
+      mouseX, mouseY,          // mouse
+      WIDTH, HEIGHT,           // resolution
+      -0.5, 0.4, -0.6, 1.0,    // sun pos
+      0.9, 0.9, 0.8, 1.0,      // sun color
+      0.2, 0.2, 0.3, 1.0,      // sky color
+      0.2, 0.2, 0.2, 1.0,      // fog color
+      1.0, 0.0, 0.0, 1.0,      // ambient
+      1.0, 0.0, 0.0, 1.0       // background
+    ]);
 
     device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
     const commandEncoder = device.createCommandEncoder();

@@ -17,12 +17,15 @@ struct VertexOut {
 
 struct UniformsIn {
   time: f32,
+  component_id: f32,
+  transition_a: f32,
+  transition_b: f32,
   mouse: vec2f,
   resolution: vec2f,
-  light_0_pos: vec4f,
-  light_0_color: vec4f,
-  light_1_pos: vec4f,
-  light_1_color: vec4f,
+  sun_pos: vec4f,
+  sun_color: vec4f,
+  sky_color: vec4f,
+  fog_color: vec4f,
   ambient: vec4f,
   background: vec4f,
 }
@@ -243,10 +246,10 @@ fn map(pos: vec3f) -> vec2f {
   var rcT: mat3x3<f32> = rotateX(0.25 * PI);
   var rc0: f32 = roundConeSDF(inverse(rcT) * (pos + vec3f(0, -0.04, 0.03)), 0.02, 0.03, 0.12);
 
-  res = opU(res, vec2f(subSDF(unionSDF(c0, c1), c2), 31.9));
-  res = opU(res, vec2f(smoothSubSDF(rr0, s0, 0.01), 31.9));
-  res = opU(res, vec2f(s1, 5.0));
-  res = opU(res, vec2f(rc0, 31.9));
+  res = opU(res, vec2f(subSDF(unionSDF(c0, c1), c2), 3));
+  res = opU(res, vec2f(smoothSubSDF(rr0, s0, 0.01), 2));
+  res = opU(res, vec2f(s1, 4));
+  res = opU(res, vec2f(rc0, 3));
 
   return res;
 }
@@ -353,27 +356,29 @@ fn checkersGradBox(p: vec2f, dpdx: vec2f, dpdy: vec2f) -> f32 {
 
 fn render(ro: vec3f, rd: vec3f, rdx: vec3f, rdy: vec3f) -> vec3f {
   // background
-  var col: vec3f = vec3f(0.7, 0.7, 0.9) - max(rd.y,0.0)*0.3;
+  var col: vec3f = uni.fog_color.xyz - max(rd.y, 0.0) * 0.3;
+
+  // emission amount
+  var emission_amount: f32 = 0.0;
+  var emission_color: vec3f = vec3f(0.0, 0.0, 0.0);
 
   // raycast scene
-  var res: vec2f = raycast(ro,rd);
+  var res: vec2f = raycast(ro, rd);
   var t: f32 = res.x;
   var m: f32 = res.y;
-  if( m>-0.5 )
-  {
+  if(m > -0.5) {
     var pos: vec3f = ro + t*rd;
     var nor: vec3f = vec3f(0.0, 1.0, 0.0);
     if (m >= 1.5) {
       nor = calcNormal(pos);
     }
-    var refl: vec3f = reflect( rd, nor );
+    var refl: vec3f = reflect(rd, nor);
 
     // material
-    col = 0.2 + 0.2*sin( m*2.0 + vec3f(0.0,0.5,0.5) );
+    col = 0.2 + 0.2 * sin(m * 2.0 + vec3f(0.0,0.5,0.5));
     var ks: f32 = 1.0;
 
-    if( m<1.5 )
-    {
+    if(m < 1.5) {  // Panel mount
       // project pixel footprint into the plane
       var dpdx: vec3f = ro.y*(rd/rd.y-rdx/rdx.y);
       var dpdy: vec3f = ro.y*(rd/rd.y-rdy/rdy.y);
@@ -381,55 +386,68 @@ fn render(ro: vec3f, rd: vec3f, rdx: vec3f, rdy: vec3f) -> vec3f {
       var f: f32 = checkersGradBox( 3.0*pos.xz, 3.0*dpdx.xz, 3.0*dpdy.xz );
       col = 0.15 + f*vec3f(0.05);
       ks = 0.4;
+    } else if (m < 2.5) {  // Panel module
+      col = vec3f(0.6, 0.6, 0.6);
+    } else if (m < 3.5) {  // Controls
+      col = vec3f(0.2, 0.2, 0.2);
+    } else if (m < 4.5) {  // Approved
+      col = vec3f(0.0, 1.0, 0.0);
+      emission_color = vec3f(0.3, 0.95, 0.3);
+      emission_amount = 0.8;
+    } else if (m < 5.5) {  // Declined
+      col = vec3f(1.0, 0.0, 0.0);
+      emission_color = vec3f(0.95, 0.2, 0.2);
+      emission_amount = 0.8;
     }
 
     // lighting
-    var occ: f32 = calcAO( pos, nor );
+    var occ: f32 = calcAO(pos, nor);
 
     var lin: vec3f = vec3f(0.0);
 
     // sun
     {
-      var lig: vec3f = normalize(uni.light_0_pos.xyz);
-      var hal: vec3f = normalize( lig-rd );
-      var dif: f32 = clamp( dot( nor, lig ), 0.0, 1.0 );
+      var lig: vec3f = normalize(uni.sun_pos.xyz);
+      var hal: vec3f = normalize(lig - rd);
+      var dif: f32 = clamp(dot(nor, lig), 0.0, 1.0);
       //if( dif>0.0001 )
-      dif *= calcSoftshadow( pos, lig, 0.02, 2.5 );
-      var spe: f32 = pow( clamp( dot( nor, hal ), 0.0, 1.0 ),16.0);
+      dif *= calcSoftshadow(pos, lig, 0.02, 2.5);
+      var spe: f32 = pow(clamp(dot(nor, hal), 0.0, 1.0), 16.0);
       spe *= dif;
-      spe *= 0.04+0.96*pow(clamp(1.0-dot(hal,lig),0.0,1.0),5.0);
+      spe *= 0.04 + 0.96 * pow(clamp(1.0 - dot(hal, lig), 0.0, 1.0), 5.0);
       //spe *= 0.04+0.96*pow(clamp(1.0-sqrt(0.5*(1.0-dot(rd,lig))),0.0,1.0),5.0);
-      lin += col*2.20*dif*vec3f(1.30,1.00,0.70);
-      lin +=     5.00*spe*vec3f(1.30,1.00,0.70)*ks;
+      lin += col * 2.20 * dif * uni.sun_color.xyz;
+      lin += 5.00 * spe * uni.sun_color.xzy * ks;
     }
     // sky
     {
-      var dif: f32 = sqrt(clamp( 0.5+0.5*nor.y, 0.0, 1.0 ));
+      var dif: f32 = sqrt(clamp(0.5 + 0.5 * nor.y, 0.0, 1.0));
       dif *= occ;
-      var spe: f32 = smoothstep( -0.2, 0.2, refl.y );
+      var spe: f32 = smoothstep(-0.2, 0.2, refl.y);
       spe *= dif;
-      spe *= 0.04+0.96*pow(clamp(1.0+dot(nor,rd),0.0,1.0), 5.0 );
+      spe *= 0.04 + 0.96 * pow(clamp(1.0 + dot(nor, rd), 0.0, 1.0), 5.0);
       //if( spe>0.001 )
-      spe *= calcSoftshadow( pos, refl, 0.02, 2.5 );
-      lin += col*0.60*dif*vec3f(0.40,0.60,1.15);
-      lin +=     2.00*spe*vec3f(0.40,0.60,1.30)*ks;
+      spe *= calcSoftshadow(pos, refl, 0.02, 2.5);
+      lin += col * 0.60 * dif * uni.sky_color.xyz;
+      lin += 2.00 * spe * uni.sky_color.xyz * ks;
     }
     // back
     {
-      var dif: f32 = clamp( dot( nor, normalize(vec3f(0.5,0.0,0.6))), 0.0, 1.0 )*clamp( 1.0-pos.y,0.0,1.0);
+      var dif: f32 = clamp(dot(nor, normalize(vec3f(0.5, 0.0, 0.6))), 0.0, 1.0) * clamp(1.0 - pos.y, 0.0, 1.0);
       dif *= occ;
-      lin += col*0.55*dif*vec3f(0.25,0.25,0.25);
+      lin += col * 0.55 * dif * vec3f(0.25, 0.25, 0.25);
     }
     // sss
     {
-      var dif: f32 = pow(clamp(1.0+dot(nor,rd),0.0,1.0),2.0);
+      var dif: f32 = pow(clamp(1.0 + dot(nor, rd), 0.0, 1.0), 2.0);
       dif *= occ;
-      lin += col*0.25*dif*vec3f(1.00,1.00,1.00);
+      lin += col * 0.25 * dif * vec3f(1.00, 1.00, 1.00);
     }
 
     col = lin;
 
-    col = mix( col, vec3f(0.7,0.7,0.9), 1.0-exp( -0.0001*t*t*t ) );
+    col = mix(col, uni.fog_color.xyz, 1.0 - exp(-0.0001 * t * t * t));
+    col = mix(col, emission_color, emission_amount);
   }
 
   return clampVec3f(col, 0.0, 1.0);
@@ -451,9 +469,9 @@ fn fragment_main(fragData: VertexOut) -> @location(0) vec4f {
 
   // Camera
   const target_cam: vec3f = vec3f(0, 0, 0);
-  const radius_cam: f32 = 0.1;  // 1.5;
-  const hight_cam: f32 = 2;  // 0.5;
-  const time_speed_cam: f32 = 0;  // 0.05;
+  const radius_cam: f32 = 1.5;  // 0.1;
+  const hight_cam: f32 = 0.5;  // 2;
+  const time_speed_cam: f32 = 0.05;  // 0;
   const mouse_speed_cam: f32 = 2.5;
   var ro: vec3f = target_cam + vec3(
       radius_cam * cos(time_speed_cam * time + mouse_speed_cam * mo.x),
