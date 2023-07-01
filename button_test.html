@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Button</title>
+  <meta name="description" content="Button test." />
+  <meta name="author" content="Greg Marshall" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Roboto:wght@500&display=swap" rel="stylesheet">
+<style>html, body { margin: 0; width: 100%; height: 100%; font-size: 0; }</style>
+</head>
+<body>
+<div class="app"></div>
+<script id="shader" type="text/wgsl">
+struct VertexOut {
+  @builtin(position) position : vec4f,
+  @location(0) uv : vec2f
+}
+
+@vertex
+fn vertex_main(@location(0) position: vec4f,
+               @location(1) uv: vec2f) -> VertexOut
+{
+  var output : VertexOut;
+  output.position = position;
+  output.uv = uv;
+  return output;
+}
+
+@group(0) @binding(0) var tex_sampler: sampler;
+@group(0) @binding(1) var texture: texture_2d<f32>;
+
+@fragment
+fn fragment_main(frag_data: VertexOut) -> @location(0) vec4f
+{
+  return textureSample(texture, tex_sampler, frag_data.uv);
+}
+
+</script>
+<script>
+
+function makeAABB2(minX, minY, maxX, maxY) {
+  return {
+    min: {x: Math.min(minX, maxX), y: Math.min(minY, maxY)},
+    max: {x: Math.max(minX, maxX), y: Math.max(minY, maxY)}
+  };
+}
+
+function widthFromAABB2(aabb) {
+  return aabb.max.x - aabb.min.x;
+}
+
+function heightFromAABB2(aabb) {
+  return aabb.max.y - aabb.min.y;
+}
+
+function aspectFromAABB2(aabb) {
+  return widthFromAABB2(aabb) / heightFromAABB2(aabb);
+}
+
+function getPowerOfTwo(value) {
+  let power = 1;
+  while (power < value) {
+    power *= 2;
+  }
+  return power;
+}
+
+function hasFont(name) {
+  return new Promise((resolve, reject) => {
+    if (document.fonts.check(name)) {
+      resolve();
+      return;
+    }
+    const forceLoadSpan = document.createElement('span');
+    forceLoadSpan.style.font = name;
+    document.body.appendChild(forceLoadSpan);
+    document.fonts.onloadingdone = (event) => {
+      if (document.fonts.check(name)) {
+        try {
+          document.body.removeChild(forceLoadSpan);
+        } catch (error) {}  // No action required already removed.
+        resolve();
+      }
+    };
+  });
+}
+
+async function makeTextTexture(device, text, font, size) {
+  const fontString = `${size}px ${font}`;
+  await hasFont(fontString);
+  const source = document.createElement('canvas');
+  const ctx = source.getContext('2d');
+  ctx.font = fontString;
+  const measure = ctx.measureText(text);
+  const lrMargin = Math.ceil(0.8 * size);
+  const tbMargin = Math.ceil(0.4 * size);
+  const lineHeight = Math.ceil(1.3 * size);
+  const minWidth = Math.ceil(measure.width + 2 * lrMargin);
+  const minHeight = Math.ceil(lineHeight + 2 * tbMargin);
+  const width = getPowerOfTwo(minWidth);
+  const height = getPowerOfTwo(minHeight);
+  const xNudge = Math.floor(0.5 * (width - minWidth));
+  const yNudge = Math.floor(0.5 * (height - minHeight));
+  const uvXNudge = xNudge / width;
+  const uvYNudge = yNudge / height;
+  const uv = makeAABB2(uvXNudge, uvYNudge, 1 - uvXNudge, 1 - uvYNudge);
+  const aspect = minWidth / minHeight;
+  source.width = width;
+  source.height = height;
+  source.style.width = `${width}px`;
+  source.style.height = `${height}px`;
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, width, height);
+  ctx.font = fontString;
+  ctx.fillStyle = '#fff';
+  ctx.fillText(text, lrMargin + xNudge, tbMargin + size + yNudge);
+
+  const textureDescriptor = {
+    size: {width, height},
+    format: 'rgba8unorm',
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
+  };
+  const texture = device.createTexture(textureDescriptor);
+  device.queue.copyExternalImageToTexture({source}, {texture}, textureDescriptor.size);
+
+  return {texture, width, height, uv, aspect};
+}
+
+async function start() {
+  const appDiv = document.querySelector('.app');
+  const appCanvas = document.createElement('canvas');
+  const appCTX = appCanvas.getContext('webgpu');
+  const appShader = document.getElementById('shader').text;
+  let mouseX = -1;
+  let mouseY = -1;
+  let appWidth = -1;
+  let appHeight = -1;
+
+  const resize = () => {
+    const nextWidth = appDiv.parentElement.clientWidth;
+    const nextHeight = appDiv.parentElement.clientHeight;
+    if (nextWidth === appWidth && nextHeight === appHeight) return;
+    appWidth = nextWidth;
+    appHeight = nextHeight;
+    appCanvas.width = appWidth;
+    appCanvas.height = appHeight;
+    appCanvas.style.width = `${appWidth}px`;
+    appCanvas.style.height = `${appHeight}px`;
+  };
+
+  appCanvas.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  appDiv.appendChild(appCanvas);
+  resize();
+  window.onresize = resize;
+
+  if (!navigator.gpu) {
+    console.error('WebGPU not supported.');
+    return;
+  }
+  const adapter = await navigator.gpu.requestAdapter();
+  if (!adapter) {
+    console.error('Unable to request a WebGPU adapter.');
+    return;
+  }
+  const device = await adapter.requestDevice();
+  const shaderModule = device.createShaderModule({code: appShader});
+  appCTX.configure({
+    device, format: navigator.gpu.getPreferredCanvasFormat(), alphaMode: 'premultiplied'
+  });
+  const vertices = new Float32Array([
+    -1, 1, 0, 1,
+    0, 0,
+
+    -1, -1, 0, 1,
+    0, 1,
+
+    1, 1, 0, 1,
+    1, 0,
+
+    1, 1, 0, 1,
+    1, 0,
+
+    -1, -1, 0, 1,
+    0, 1,
+
+    1, -1, 0, 1,
+    1, 1,
+  ]);
+  const vertexBuffer = device.createBuffer({
+    size: vertices.byteLength,
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+  });
+  device.queue.writeBuffer(vertexBuffer, 0, vertices, 0, vertices.length);
+  const vertexBuffers = [
+    {
+      attributes: [
+        { shaderLocation: 0, offset: 0, format: 'float32x4' },
+        { shaderLocation: 1, offset: 16, format: 'float32x2' },
+      ],
+      arrayStride: 24,
+      stepMode: 'vertex'
+    }
+  ];
+  const pipelineDescriptor = {
+    vertex: {
+      module: shaderModule,
+      entryPoint: 'vertex_main',
+      buffers: vertexBuffers
+    },
+    fragment: {
+      module: shaderModule,
+      entryPoint: 'fragment_main',
+      targets: [{ format: navigator.gpu.getPreferredCanvasFormat() }]
+    },
+    primitive: { topology: 'triangle-list' },
+    layout: 'auto'
+  };
+  const renderPipeline = device.createRenderPipeline(pipelineDescriptor);
+
+  const tP = await makeTextTexture(device, 'Pacifico', 'Pacifico', 32);
+  const tR = await makeTextTexture(device, 'Roboto', 'Roboto', 28);
+
+  const sampler = device.createSampler();
+  const bindGroup = device.createBindGroup({
+    layout: renderPipeline.getBindGroupLayout(0),
+    entries: [
+      {binding: 0, resource: sampler},
+      {binding: 1, resource: tP.texture.createView()}
+    ]
+  });
+
+  const draw = (time) => {
+    const commandEncoder = device.createCommandEncoder();
+    const clearColor = {r: 0.5, g: 0.5, b: 0.5, a: 1.0};
+
+    const renderPassDescriptor = {
+      colorAttachments: [
+        {
+          clearValue: clearColor,
+          loadOp: 'clear',
+          storeOp: 'store',
+          view: appCTX.getCurrentTexture().createView(),
+        },
+      ],
+    };
+
+    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+    passEncoder.setPipeline(renderPipeline);
+    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.setVertexBuffer(0, vertexBuffer);
+    passEncoder.draw(6);
+    passEncoder.end();
+
+    device.queue.submit([commandEncoder.finish()]);
+
+    window.requestAnimationFrame(draw);
+  };
+
+  draw();
+}
+
+start();
+</script>
+</body>
+</html>

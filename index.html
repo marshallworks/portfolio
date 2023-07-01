@@ -234,17 +234,18 @@ fn opU(d1: vec2f, d2: vec2f) -> vec2f {
   return d2;
 }
 
-fn map(pos: vec3f) -> vec2f {
+fn toggleSwitchSDF(pos: vec3f, loc: vec3f) -> vec2f {
   var res: vec2f = vec2f(pos.y, 0.0);
+  var p: vec3f = pos + loc;
 
-  var rr0: f32 = roundedBoxSDF(pos, vec3f(0.13, 0.01, 0.13), 0.01);
-  var s0: f32 = sphereSDF(pos + vec3f(0, -0.146, 0), 0.15);
-  var s1: f32 = sphereSDF(pos + vec3f(0, 0.02, 0), 0.05);
-  var c0: f32 = roundedCylinderXSDF(pos + vec3f( 0.1, 0, 0), 0.05, 0.01, 0.01);
-  var c1: f32 = roundedCylinderXSDF(pos + vec3f(-0.1, 0, 0), 0.05, 0.01, 0.01);
-  var c2: f32 = cylinderXSDF(pos, vec3f(0, 0, 0.085));
+  var rr0: f32 = roundedBoxSDF(p, vec3f(0.13, 0.01, 0.13), 0.01);
+  var s0: f32 = sphereSDF(p + vec3f(0, -0.146, 0), 0.15);
+  var s1: f32 = sphereSDF(p + vec3f(0, 0.02, 0), 0.05);
+  var c0: f32 = roundedCylinderXSDF(p + vec3f( 0.1, 0, 0), 0.05, 0.01, 0.01);
+  var c1: f32 = roundedCylinderXSDF(p + vec3f(-0.1, 0, 0), 0.05, 0.01, 0.01);
+  var c2: f32 = cylinderXSDF(p, vec3f(0, 0, 0.085));
   var rcT: mat3x3<f32> = rotateX(0.25 * PI);
-  var rc0: f32 = roundConeSDF(inverse(rcT) * (pos + vec3f(0, -0.04, 0.03)), 0.02, 0.03, 0.12);
+  var rc0: f32 = roundConeSDF(inverse(rcT) * (p + vec3f(0, -0.04, 0.03)), 0.02, 0.03, 0.12);
 
   res = opU(res, vec2f(subSDF(unionSDF(c0, c1), c2), 3));
   res = opU(res, vec2f(smoothSubSDF(rr0, s0, 0.01), 2));
@@ -252,6 +253,23 @@ fn map(pos: vec3f) -> vec2f {
   res = opU(res, vec2f(rc0, 3));
 
   return res;
+}
+
+fn buttonSDF(pos: vec3f, loc: vec3f) -> vec2f {
+  var res: vec2f = vec2f(pos.y, 0.0);
+  var p: vec3f = pos + loc;
+
+  var rr0: f32 = roundedBoxSDF(p, vec3f(0.13, 0.01, 0.13), 0.01);
+
+  res = opU(res, vec2f(rr0, 2));
+
+  return res;
+}
+
+fn map(pos: vec3f) -> vec2f {
+  var s0: vec2f = buttonSDF(pos, vec3f(0));
+  var s1: vec2f = toggleSwitchSDF(pos, vec3f(0.3, 0, 0));
+  return opU(s0, s1);
 }
 
 fn iBox(ro: vec3f, rd: vec3f, rad: vec3f) -> vec2f {
